@@ -1,0 +1,15 @@
+<html>
+<head>
+<title>Ultima Castle Generator by Slashie</title>
+<script src = "generator.js"></script>
+<script>
+function generateMap(){
+	var generator = new MapGenerator();
+	var castle = generator.generateMap({royal: true})
+	document.getElementById("mapOutput").innerHTML = '<pre>'+JSON.stringify(castle, null, 2)+'</pre>';
+}
+</script>
+</head>
+<button onclick="generateMap()">Generate</button>
+<div id = "mapOutput"></div>
+</html>

@@ -5,10 +5,8 @@ function CastleStructureGenerator(){};
 CastleStructureGenerator.prototype = {
 	generateMap: function(generationParams){
 		this.generationParams = generationParams;
-		return this.generateHighLevelStructure();
-	},
-	generateHighLevelStructure: function(){
 		var castle = {};
+		this.castle = castle;
 		castle.general = this.selectGeneral();
 		castle.surroundings = this.selectSurroundings();
 		castle.towers = this.selectTowers();
@@ -41,11 +39,14 @@ CastleStructureGenerator.prototype = {
 		entranceStructure.hasCrossWindows = Random.chance(50);
 		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
 		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
+		entranceStructure.width = this.castle.central.width - Random.rand(3, 6) * 2;
+		if (entranceStructure.width < 3)
+			entranceStructure.width = 3;
 		return entranceStructure;
 	},
 	selectTowers: function(){
 		var towerStructure = {};
-		towerStructure.size = 5 + Random.rand(0,2) * 2;
+		towerStructure.size = 5 + Random.rand(0,1) * 2;
 		towerStructure.crossWindows = Random.chance(50);
 		towerStructure.circle = Random.chance(50);
 
@@ -92,9 +93,21 @@ CastleStructureGenerator.prototype = {
 			}
 			centralStructure.hasFireplace = Random.chance(50);
 		}
-		centralStructure.width = Random.rand(9,15);
+		centralStructure.width = 9 + Random.rand(0,3)*2;
+		var maxWidth = 15;
+		if (this.castle.towers.verticalConnections)
+			maxWidth -= 8;
+		if (this.castle.towers.connectionCorridors.hallWidth > 3)
+			maxWidth -= 2;
+		var maxHeight = 15;
+		if (this.castle.towers.horizontalConnections === 'both')
+			maxHeight -= 4;
+		if (centralStructure.width > maxWidth)
+			centralStructure.width = maxWidth;
 		if (Random.chance(50)){
-			centralStructure.height = Random.rand(9,15);
+			centralStructure.height = 9 + Random.rand(0,3)*2;
+			if (centralStructure.height > maxHeight)
+				centralStructure.height = maxHeight;
 		} else {
 			centralStructure.height = centralStructure.width;
 		}

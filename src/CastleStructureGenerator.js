@@ -1,0 +1,223 @@
+var Random = require('./Random');
+
+function CastleStructureGenerator(){};
+
+CastleStructureGenerator.prototype = {
+	generateMap: function(generationParams){
+		this.generationParams = generationParams;
+		return this.generateHighLevelStructure();
+	},
+	generateHighLevelStructure: function(){
+		var castle = {};
+		castle.general = this.selectGeneral();
+		castle.surroundings = this.selectSurroundings();
+		castle.towers = this.selectTowers();
+		castle.central = this.selectCentral();
+		castle.entrances = this.selectEntrances();
+		castle.rooms = this.selectRooms(castle);
+		return castle;
+	},
+	selectGeneral: function(){
+		return {
+			size: Random.chance(80) ? 'big' : 'small'
+		}
+	},
+	selectSurroundings: function(){
+		return {
+			hasMoat: Random.chance(50)
+		}
+	},
+	selectEntrances: function(){
+		var entranceStructure = {};
+		if (Random.chance(50)){
+			entranceStructure.northExit = this.selectEntrance(false);
+		}
+		entranceStructure.southExit = this.selectEntrance(true);
+		return entranceStructure;
+	},
+	selectEntrance: function(mainEntrance){
+		var entranceStructure = {};
+		entranceStructure.hasFloor = Random.chance(50);
+		entranceStructure.hasCrossWindows = Random.chance(50);
+		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
+		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
+		return entranceStructure;
+	},
+	selectTowers: function(){
+		var towerStructure = {};
+		towerStructure.size = 5 + Random.rand(0,2) * 2;
+		towerStructure.crossWindows = Random.chance(50);
+		towerStructure.circle = Random.chance(50);
+
+		towerStructure.verticalConnections = Random.chance(50);
+		towerStructure.horizontalConnections = Random.randomElementOf(['both', 'top', 'bottom']);
+		towerStructure.connectionCorridors = {};
+		if (Random.chance(50)){
+			towerStructure.connectionCorridors.type = 'corridor';
+		} else {
+			towerStructure.connectionCorridors.type = 'halls';
+			towerStructure.connectionCorridors.hallDecoration = {
+				torches: Random.chance(50),
+				plants: Random.chance(50),
+				columns: Random.chance(50),
+				fountains: Random.chance(50)
+			}
+			towerStructure.connectionCorridors.hallWidth = Random.rand(3,5);
+		}
+		return towerStructure;
+	},
+	selectCentral: function(){
+		var centralStructure = {};
+		if (Random.chance(50)){
+			centralStructure.type = 'courtyard';
+			if (Random.chance(50)){
+				centralStructure.centralFeature = 'fountain';
+				if (Random.chance(50)){
+					centralStructure.additionalFountains = true;
+					centralStructure.fountainSymmetry = Random.randomElementOf(['x', 'y', 'full']);
+				}
+				centralStructure.hasSmallLake = Random.chance(50);
+			} else {
+				centralStructure.centralFeature = 'well';
+			}
+			centralStructure.connectionWithRooms = {
+				type: Random.randomElementOf(['radial', 'around']),
+				terrain: Random.randomElementOf(['floor', 'dirt'])
+			};
+		} else {
+			centralStructure.type = 'mainHall';
+			centralStructure.hasSpecialFloor = Random.chance(50);
+			if (Random.chance(50)){
+				centralStructure.centralFeature = 'fountain';
+			}
+			centralStructure.hasFireplace = Random.chance(50);
+		}
+		centralStructure.width = Random.rand(9,15);
+		if (Random.chance(50)){
+			centralStructure.height = Random.rand(9,15);
+		} else {
+			centralStructure.height = centralStructure.width;
+		}
+		centralStructure.shape = Random.randomElementOf(['square', 'circle', 'cross']);
+		return centralStructure;
+	},
+	selectRooms: function(castle){
+		var numberOfRooms = 0;
+		if (castle.general.size === 'small'){
+			// Only four rooms, one below each "Tower"
+			numberOfRooms = 4;
+		} else {
+			// Number of rooms depends on available space
+			/**
+			 * Base is 8 rooms
+			 * -1 If North Exit
+			 * +4 If no vertical connections between towers
+			 * +2 If no top connection between towers
+			 * +2 If no bottom connection between towers
+			 * -4 If central feature is too big
+			 */
+			numberOfRooms = 8;
+			if (castle.entrances.northExit)
+				numberOfRooms--;
+			if (castle.towers.verticalConnections)
+			 	numberOfRooms+= 4;
+			if (castle.towers.horizontalConnections != 'both')
+			 	numberOfRooms+= 2;
+			if (castle.central.width > 10)
+			 	numberOfRooms-= 4;
+			if (numberOfRooms < 0)
+				numberOfRooms = 0;
+		}
+		var rooms = [];
+		this.currentRooms = {};
+		for (var i = 0; i < numberOfRooms; i++){
+			var room = this.selectRoom(rooms);
+			this.fillRoom(room);
+			rooms.push(room);
+		}
+		return rooms;
+	},
+	fillRoom: function(room){
+		switch (room.type){
+			case 'livingQuarters':
+				room.freeSpace = Random.rand(0, 50);
+				break;
+			case 'guestRoom':
+				room.beds = Random.rand(1,2);
+				room.mirror = Random.chance(50);
+				room.piano = Random.chance(30);
+				room.fireplace = Random.chance(50);
+				break;
+			case 'storage':
+				room.filled = Random.rand(60,90);
+				room.barrels = Random.rand(0,room.filled);
+				room.boxes = room.filled - room.barrels;
+				break;
+			case 'diningRoom':
+				room.luxury = Random.rand(1,3);
+				room.fireplace = Random.chance(50);
+				break;
+			case 'kitchen':
+				room.filled = Random.rand(0,20);
+				room.barrels = Random.rand(0,room.filled);
+				room.boxes = room.filled - room.barrels;
+				room.hasOven = Random.chance(50);
+				break;
+			case 'throneRoom':
+				room.hasCarpet = Random.chance(70);
+				room.linedWithColumns = Random.chance(30);
+				room.linedWithTorches = Random.chance(70);
+				room.hasSecondaryThrone = Random.chance(50);
+				room.hasMagicOrb = Random.chance(50);
+				break;
+			case 'lordQuarters':
+				room.piano = Random.chance(50);
+				room.clock = Random.chance(50);
+				room.bookshelf = Random.chance(70);
+				room.fireplace = Random.chance(80);
+				break;
+			case 'hall':
+				room.torches = Random.chance(50);
+				room.plants = Random.chance(50);
+				room.columns = Random.chance(50);
+				room.fountains = Random.chance(50);
+				break;
+		}
+	},
+	selectRoom: function(rooms){
+		/**
+		 * Throne Room - Required if the castle is Royal
+		 * Castle Lord Room - Required
+		 * Staff Living Quarters - At least one
+		 * Dining rooms - At least one
+		 * Kitchen - At least one
+		 * Forge - Optional, only one
+		 * Prison Cells - Optional
+		 * Dungeon - Optional
+		 * Hall - Optional
+		 * Library - Optional
+		 */
+		var room = {};
+		if (this.generationParams.royal && !this.currentRooms.throneRoom){
+			room.type = 'throneRoom';
+		} else if (!this.currentRooms.lordQuarters){
+			room.type = 'lordQuarters';
+		} else if (!this.currentRooms.livingQuarters){
+			room.type = 'livingQuarters';
+		} else if (!this.currentRooms.diningRoom){
+			room.type = 'diningRoom';
+		} else if (!this.currentRooms.kitchen){
+			room.type = 'kitchen';
+		} else {
+			var possibleRooms = ['livingQuarters', 'diningRoom', 'kitchen', 'prison', 'dungeon', 'hall', 'guestRoom', 'library'];
+			if (!this.currentRooms.forge){
+				possibleRooms.push('forge');
+			}
+			room.type = Random.randomElementOf(possibleRooms);
+		}
+		this.currentRooms[room.type] = true;
+		return room;
+	}
+}
+
+module.exports = CastleStructureGenerator;

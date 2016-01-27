@@ -7,10 +7,10 @@ RoomsGenerator.prototype = {
 		this.structure = structure;
 		this.generationParams = generationParams;
 		this.rooms = [];
-		this.placeRooms();
 		this.placeTowers();
 		this.placeCentralFeature();
 		this.placeEntrances();
+		this.placeRooms();
 		return this.rooms;
 	},
 	placeTowers: function(){
@@ -187,15 +187,93 @@ RoomsGenerator.prototype = {
 
 	},
 	placeRooms: function(){
-		//TODO: Use the remaining space to subdivide and place rooms
+		var def = this.structure.towers;
+		var connectionWidth = def.connectionCorridors.type === 'corridor' ? 3 : def.connectionCorridors.hallWidth;
+		var x = 3;
+		var adjustment = (def.size - connectionWidth)%2 == 0 ? 1 : 0;
+		if (def.verticalConnections){
+			x = 1 + Math.floor(def.size / 2) + Math.floor(connectionWidth/2) + adjustment;
+		}
+		var y = 3;
+		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'top'){
+			y = 1 + Math.floor(def.size / 2) + Math.floor(connectionWidth/2) + adjustment;
+		}
+		var yEnd = this.generationParams.height - 5;
+		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom'){
+			yEnd = this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2) - adjustment;
+		}
 		this.addRoom(
-			Math.floor(this.structure.towers.size / 2) + 1,
-			Math.floor(this.structure.towers.size / 2) + 1,
+			x,
+			y,
 			'rooms',
 			'',
-			this.generationParams.width - this.structure.towers.size - 1,
-			this.generationParams.height - this.structure.towers.size - 1
+			Math.floor(this.generationParams.width / 2) - x,
+			yEnd - y + 1
 		);
+		var area = {
+			x: x,
+			y: y,
+			w: Math.floor(this.generationParams.width / 2) - x,
+			h: yEnd - y + 1
+		};
+		// Brute force! Let's try a lot of times to fit the rooms in the space we have!
+		var roomsToPlace = Math.ceil(this.structure.rooms.length / 2);
+		var minHeight = 3;
+		var maxHeight = 5;
+		var minWidth = 3;
+		var maxWidth = 5;
+		var addedRooms = [];
+		for (var i = 0; i < 100; i++){
+			for (var j = 0; j < 1000; j++){
+				var room = {
+					x: Random.rand(area.x, area.x + area.w - 2 - minWidth),
+					y: Random.rand(area.y, area.y + area.h - 2 - minHeight),
+					w: Random.rand(minWidth, maxWidth),
+					h: Random.rand(minHeight, maxHeight),
+				};
+				if (this.validRoom(room, addedRooms)){
+					addedRooms.push(room);
+					roomsToPlace--;
+					if (roomsToPlace == 0)
+						break;
+				}
+			}
+			if (roomsToPlace == 0)
+				break;
+			roomsToPlace = Math.ceil(this.structure.rooms.length / 2);
+			addedRooms = [];
+		}
+		//TODO: Expand rooms to fill as much space as possible
+		// We either suceeded or failed; remaining space should be small corridors
+		for (var i = 0; i < addedRooms.length; i++){
+			var room = addedRooms[i];
+			if (!this.structure.rooms[i])
+				break;
+			var roomDef = this.structure.rooms[i];
+			this.addRoom(room.x, room.y, roomDef.type, roomDef.type, room.w, room.h);
+		}
+	},
+	validRoom: function(room, tempRooms){
+		// Must not collide with other rooms (except the towers)
+		for (var i = 0; i < this.rooms.length; i++){
+			var existingRoom = this.rooms[i];
+			if (existingRoom.type === 'tower' || existingRoom.type === 'rooms'){
+				continue;
+			}
+			if (existingRoom.x < room.x + room.w && existingRoom.x + existingRoom.width > room.x &&
+    			existingRoom.y < room.y + room.h && existingRoom.y + existingRoom.height > room.y) {
+				return false;
+			}
+		}
+		// Must not collide with other temp rooms
+		for (var i = 0; i < tempRooms.length; i++){
+			var existingRoom = tempRooms[i];
+			if (existingRoom.x < room.x + room.w && existingRoom.x + existingRoom.w > room.x &&
+    			existingRoom.y < room.y + room.h && existingRoom.y + existingRoom.h > room.y) {
+				return false;
+			}
+		}
+		return true;
 	},
 	addRoom: function(x, y, type, name, width, height, features){
 		this.rooms.push({

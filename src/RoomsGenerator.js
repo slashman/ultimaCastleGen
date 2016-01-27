@@ -218,6 +218,7 @@ RoomsGenerator.prototype = {
 		};
 		// Brute force! Let's try a lot of times to fit the rooms in the space we have!
 		var roomsToPlace = Math.ceil(this.structure.rooms.length / 2);
+		this.roomsArea = area;
 		var minHeight = 3;
 		var maxHeight = 5;
 		var minWidth = 3;
@@ -243,7 +244,32 @@ RoomsGenerator.prototype = {
 			roomsToPlace = Math.ceil(this.structure.rooms.length / 2);
 			addedRooms = [];
 		}
-		//TODO: Expand rooms to fill as much space as possible
+		
+		while(true){
+			//Try to make each room bigger in a direction, until it's not possible for any
+			var grew = false;
+			for (var i = 0; i < addedRooms.length; i++){
+				var room = addedRooms[i];
+				//Select a random direction first, if it can't grow in that direction, check in order
+				var randomDirection = Random.rand(0,3);
+				if (this.roomCanGrow(room, addedRooms, randomDirection)){
+					this.growRoom(room, randomDirection);
+					grew = true;
+				} else {
+					for (var j = 0; j <= 3; j++){
+						if (this.roomCanGrow(room, addedRooms, j)){
+							this.growRoom(room, j);
+							grew = true;
+							break;
+						}
+					}
+				}
+			}
+			if (!grew){
+				break;
+			}
+		}
+		
 		// We either suceeded or failed; remaining space should be small corridors
 		for (var i = 0; i < addedRooms.length; i++){
 			var room = addedRooms[i];
@@ -253,7 +279,58 @@ RoomsGenerator.prototype = {
 			this.addRoom(room.x, room.y, roomDef.type, roomDef.type, room.w, room.h);
 		}
 	},
-	validRoom: function(room, tempRooms){
+	roomCanGrow: function(room, tempRooms, direction){
+		var testRoom = {
+			x: room.x,
+			y: room.y,
+			w: room.w,
+			h: room.h
+		}
+		switch(direction){
+			case 0:
+				testRoom.x --;
+				testRoom.w ++;
+				break;
+			case 1:
+				testRoom.w ++;
+				break;
+			case 2:
+				testRoom.y --;
+				testRoom.h ++;
+				break;
+			case 3:
+				testRoom.h ++;
+				break;
+		}
+		return this.validRoom(testRoom, tempRooms, room);
+	},
+	growRoom: function(room, direction){
+		switch(direction){
+			case 0:
+				room.x --;
+				room.w ++;
+				break;
+			case 1:
+				room.w ++;
+				break;
+			case 2:
+				room.y --;
+				room.h ++;
+				break;
+			case 3:
+				room.h ++;
+				break;
+		}
+	},
+	validRoom: function(room, tempRooms, skipRoom){
+		// Must be inside the rooms area
+		if (room.x >= this.roomsArea.x && room.x + room.w <= this.roomsArea.x + this.roomsArea.w &&
+			room.y >= this.roomsArea.y && room.y + room.h <= this.roomsArea.y + this.roomsArea.h) {
+			// Ok...
+		} else {
+			return false;
+		}
+
 		// Must not collide with other rooms (except the towers)
 		for (var i = 0; i < this.rooms.length; i++){
 			var existingRoom = this.rooms[i];
@@ -268,6 +345,9 @@ RoomsGenerator.prototype = {
 		// Must not collide with other temp rooms
 		for (var i = 0; i < tempRooms.length; i++){
 			var existingRoom = tempRooms[i];
+			if (skipRoom && skipRoom == existingRoom){
+				continue;
+			}
 			if (existingRoom.x < room.x + room.w && existingRoom.x + existingRoom.w > room.x &&
     			existingRoom.y < room.y + room.h && existingRoom.y + existingRoom.h > room.y) {
 				return false;

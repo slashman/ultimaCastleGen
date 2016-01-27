@@ -9,16 +9,20 @@ CanvasRenderer.prototype = {
 		context.font="16px Avatar";
 		if (!overlay)
 			context.clearRect(0, 0, canvas.width, canvas.height);
-		var zoom = 12;
+		var zoom = 16;
 		for (var i = 0; i < rooms.length; i++){
 			var area = rooms[i];
 			context.beginPath();
 			context.rect(area.x * zoom, area.y * zoom, area.width * zoom, area.height * zoom);
 			if (!overlay){
-				if (area.type === 'rooms')
+				if (area.type === 'rooms'){
 					context.fillStyle = 'blue';
-				else
+					context.globalAlpha = 0.5;
+				}
+				else{
 					context.fillStyle = 'yellow';
+					context.globalAlpha = 1;
+				}
 
 				context.fill();
 			}
@@ -34,6 +38,7 @@ CanvasRenderer.prototype = {
 				context.stroke();
 			}
 		}
+		context.globalAlpha = 1;
 		for (var i = 0; i < rooms.length; i++){
 			var area = rooms[i];
 			context.fillStyle = 'black';

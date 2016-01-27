@@ -42,7 +42,7 @@ CanvasRenderer.prototype = {
 		for (var i = 0; i < rooms.length; i++){
 			var area = rooms[i];
 			context.fillStyle = 'black';
-			context.fillText(area.name,(area.x)* zoom + 5,(area.y )* zoom + 20);
+			context.fillText(area.name,(area.x)* zoom + 5,(area.y + area.height/2)* zoom + 10);
 		}
 	},
 	drawLevel: function(level, canvas){

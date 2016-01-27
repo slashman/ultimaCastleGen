@@ -1,4 +1,5 @@
 var Random = require('./Random');
+var Arrays = require('./Arrays');
 
 function RoomsGenerator(){};
 
@@ -202,14 +203,14 @@ RoomsGenerator.prototype = {
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom'){
 			yEnd = this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2) - adjustment;
 		}
-		this.addRoom(
+		/*this.addRoom(
 			x,
 			y,
 			'rooms',
 			'',
 			Math.floor(this.generationParams.width / 2) - x,
 			yEnd - y + 1
-		);
+		);*/
 		var area = {
 			x: x,
 			y: y,
@@ -270,12 +271,29 @@ RoomsGenerator.prototype = {
 			}
 		}
 		
+		var originalRoomsCount = addedRooms.length;
+		// Mirror the added rooms over the y axis
+		for (var i = 0; i < originalRoomsCount; i++){
+			var room = addedRooms[i];
+			var dist = this.roomsArea.x + this.roomsArea.w - (room.x + room.w);
+			addedRooms.push({
+				x: this.roomsArea.x + this.roomsArea.w + dist - 1,
+				y: room.y,
+				w: room.w,
+				h: room.h
+			});
+		}
+
+		this.structure.rooms = Arrays.shuffle(this.structure.rooms);
 		// We either suceeded or failed; remaining space should be small corridors
 		for (var i = 0; i < addedRooms.length; i++){
 			var room = addedRooms[i];
-			if (!this.structure.rooms[i])
-				break;
-			var roomDef = this.structure.rooms[i];
+			var roomDef = false;
+			if (this.structure.rooms[i]){
+				roomDef = this.structure.rooms[i];
+			} else {
+				roomDef = {type: 'livingQuarters'}
+			}
 			this.addRoom(room.x, room.y, roomDef.type, roomDef.type, room.w, room.h);
 		}
 	},

@@ -17,7 +17,8 @@ CastleStructureGenerator.prototype = {
 	},
 	selectGeneral: function(){
 		return {
-			size: Random.chance(80) ? 'big' : 'small'
+			size: Random.chance(80) ? 'big' : 'small',
+			superSymmetric: Random.chance(20)
 		}
 	},
 	selectSurroundings: function(){

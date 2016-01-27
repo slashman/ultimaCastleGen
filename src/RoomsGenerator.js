@@ -208,7 +208,8 @@ RoomsGenerator.prototype = {
 			y,
 			'rooms',
 			'',
-			Math.floor(this.generationParams.width / 2) - x,
+			//Math.floor(this.generationParams.width / 2) - x,
+			this.generationParams.width -  2 * x - 1,
 			yEnd - y + 1
 		);*/
 		var area = {
@@ -246,6 +247,23 @@ RoomsGenerator.prototype = {
 			addedRooms = [];
 		}
 		
+		// Is the castle super symmetric? if not, we mirror the rooms before making them grow, and extend the play area
+		if (!this.structure.general.superSymmetric){
+			var originalRoomsCount = addedRooms.length;
+			// Mirror the added rooms over the y axis
+			for (var i = 0; i < originalRoomsCount; i++){
+				var room = addedRooms[i];
+				var dist = this.roomsArea.x + this.roomsArea.w - (room.x + room.w);
+				addedRooms.push({
+					x: this.roomsArea.x + this.roomsArea.w + dist - 1,
+					y: room.y,
+					w: room.w,
+					h: room.h
+				});
+			}
+			area.w = this.generationParams.width - 2 * x;
+		}
+
 		while(true){
 			//Try to make each room bigger in a direction, until it's not possible for any
 			var grew = false;
@@ -271,17 +289,20 @@ RoomsGenerator.prototype = {
 			}
 		}
 		
-		var originalRoomsCount = addedRooms.length;
-		// Mirror the added rooms over the y axis
-		for (var i = 0; i < originalRoomsCount; i++){
-			var room = addedRooms[i];
-			var dist = this.roomsArea.x + this.roomsArea.w - (room.x + room.w);
-			addedRooms.push({
-				x: this.roomsArea.x + this.roomsArea.w + dist - 1,
-				y: room.y,
-				w: room.w,
-				h: room.h
-			});
+		// If the castle is super symmetric, mirror them now (after growing)
+		if (this.structure.general.superSymmetric){
+			var originalRoomsCount = addedRooms.length;
+			// Mirror the added rooms over the y axis
+			for (var i = 0; i < originalRoomsCount; i++){
+				var room = addedRooms[i];
+				var dist = this.roomsArea.x + this.roomsArea.w - (room.x + room.w);
+				addedRooms.push({
+					x: this.roomsArea.x + this.roomsArea.w + dist - 1,
+					y: room.y,
+					w: room.w,
+					h: room.h
+				});
+			}
 		}
 
 		this.structure.rooms = Arrays.shuffle(this.structure.rooms);

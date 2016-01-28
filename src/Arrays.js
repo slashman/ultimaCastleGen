@@ -17,5 +17,12 @@ module.exports = {
         }
 
         return array;
+    },
+    removeObject: function(array, object){
+        for(var i = 0; i < array.length; i++) {
+            if(array[i] === object) {
+               array.splice(i, 1);
+            }
+        }
     }
 }

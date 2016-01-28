@@ -11,7 +11,20 @@ RoomsGenerator.prototype = {
 		this.placeTowers();
 		this.placeCentralFeature();
 		this.placeEntrances();
-		this.placeRooms();
+		var retries = 0;
+		while(true){
+			var emptyRooms = this.placeRooms();
+			var assigned = this.assignRooms(emptyRooms);
+			if (!assigned){
+				if (retries++ < 50){
+					continue;
+				} else {
+					this.assignRooms(emptyRooms, true);
+				}
+			}
+			break;
+		}
+		
 		return this.rooms;
 	},
 	placeTowers: function(){
@@ -304,19 +317,149 @@ RoomsGenerator.prototype = {
 				});
 			}
 		}
+		return addedRooms;
+	},
+	assignRooms: function(rooms, force){
+		/** We now have a lot of empty rooms, give a function to each based on the super structure
+		 * We will try several times
+		 * Following room attributes are relevant:
+		 * placeNorth: boolean - Room must be placed as north as possible
+		 * isNextTo: string - Room must be placed as close as possible to a room with the given code
+		 * southRoom: string - If there is a room in the southern exit of this room, it has to be one of the given code. Only for "placeNorth" rooms
+		 * isBig: boolean - Pick one of the rooms with greatest area
+		 */
 
-		this.structure.rooms = Arrays.shuffle(this.structure.rooms);
-		// We either suceeded or failed; remaining space should be small corridors
+		// Do we have enough big rooms in the north to satisfy requirements, can we whine?
+		if (!force){
+			var bigHeightThreshold = 8;
+			var bigNorthRequiredRooms = 0;
+			var northRequiredRooms = 0;
+			var bigRequiredRooms = 0;
+			var bigNorthAvailableRooms = 0;
+			var northAvailableRooms = 0;
+			var bigAvailableRooms = 0;
+
+			// Gather requirements
+			for (var i = 0; i < this.structure.rooms.length; i++){
+				var room = this.structure.rooms[i];
+				if (room.placeNorth){
+					if (room.isBig){
+						bigNorthRequiredRooms++;
+					} else {
+						northRequiredRooms++;
+					}
+				} else if (room.isBig){
+					bigRequiredRooms++;
+				} 
+			}
+			
+			// Sum available rooms
+			for (var i = 0; i < rooms.length; i++){
+				var room = rooms[i];
+				if (room.y == this.roomsArea.y){
+					if (room.h > bigHeightThreshold)
+						bigNorthAvailableRooms ++;
+					else
+						northAvailableRooms ++;
+				} else if (room.h > bigHeightThreshold)
+					bigAvailableRooms ++;
+			}
+
+			// Check if we comply
+			if (bigNorthAvailableRooms < bigNorthRequiredRooms || 
+				northAvailableRooms < northRequiredRooms ||
+				bigAvailableRooms < bigRequiredRooms)
+				return false; // Give me better rooms!
+		}
+
+		var addedRooms = []; //TODO: Remove
+		
+		// Split the rooms by category
+		var northAvailableRooms = [];
+		var northBigAvailableRooms = [];
+		var bigAvailableRooms = [];
+		var otherAvailableRooms = [];
+		for (var i = 0; i < rooms.length; i++){
+			var room = rooms[i];
+			if (room.y == this.roomsArea.y){
+				if (room.h > bigHeightThreshold){
+					northBigAvailableRooms.push(room);
+				} else {
+					northAvailableRooms.push(room);
+				}
+			} else {
+				if (room.h > bigHeightThreshold){
+					bigAvailableRooms.push(room);
+				} else {
+					otherAvailableRooms.push(room);
+				}
+			}
+		}
+
+		// Shuffle the rooms
+		var roomsToAdd = Arrays.shuffle(this.structure.rooms);
+		// but place rooms with southRoom first
+		roomsToAdd = roomsToAdd.sort(function(a, b){
+			return (a.southRoom && b.southRoom) ? 0 : a.southRoom ? -1 : 1;
+		});
+		for (var i = 0; i < roomsToAdd.length; i++){
+			var requiredRoom = roomsToAdd[i];
+			var room = false;
+			if (requiredRoom.placeNorth){
+				if (requiredRoom.isBig || northAvailableRooms.length == 0){
+					room = Random.randomElementOf(northBigAvailableRooms);
+				} else {
+					room = Random.randomElementOf(northAvailableRooms);
+				}
+			} else if (requiredRoom.isBig){
+				room = Random.randomElementOf(bigAvailableRooms);
+			} else {
+				room = Random.randomElementOf(otherAvailableRooms);
+			}
+			if (!room){
+				// Couldn't pick from preferred? pick from any available!!
+				if (otherAvailableRooms.length) room = Random.randomElementOf(otherAvailableRooms);
+				if (northBigAvailableRooms.length) room = Random.randomElementOf(northBigAvailableRooms);
+				if (northAvailableRooms.length) room = Random.randomElementOf(northAvailableRooms);
+				if (bigAvailableRooms.length) room = Random.randomElementOf(bigAvailableRooms);
+			}
+			// Remove used space
+			Arrays.removeObject(northBigAvailableRooms, room);
+			Arrays.removeObject(northAvailableRooms, room); 
+			Arrays.removeObject(bigAvailableRooms, room); 
+			Arrays.removeObject(otherAvailableRooms, room);
+			if (room){
+				addedRooms.push({x: room.x, y: room.y, name: requiredRoom.type, type: requiredRoom.type, w: room.w, h: room.h});	
+				// Place south rooms
+				if (requiredRoom.southRoom){
+					var southRoom = this.getRoomAt(rooms, room.x + Math.floor(room.w/2), room.y + room.h+2);
+					if (!southRoom){
+						// There's probably a hall, or the central feature which is fine.
+					} else {
+						addedRooms.push({x: southRoom.x, y: southRoom.y, name: requiredRoom.southRoom, type: requiredRoom.southRoom, w: southRoom.w, h: southRoom.h});
+						Arrays.removeObject(bigAvailableRooms, southRoom); // Available space used
+						Arrays.removeObject(otherAvailableRooms, southRoom); // Available space used
+					}
+				}
+			} else {
+				console.log("No room for "+requiredRoom.type)
+			}
+		}
+
+		// Fill unused rooms with halls (?)
+		var remainingRooms = northBigAvailableRooms.concat(northAvailableRooms).concat(bigAvailableRooms).concat(otherAvailableRooms);
+		for (var i = 0; i < remainingRooms.length; i++){
+			var availableRoom = remainingRooms[i];
+			addedRooms.push({x: availableRoom.x, y: availableRoom.y, name: 'hall*', type: 'hall*', w: availableRoom.w, h: availableRoom.h});
+		}
+			
+		// Officially add the rooms
+		// TODO: Not needed anymore
 		for (var i = 0; i < addedRooms.length; i++){
 			var room = addedRooms[i];
-			var roomDef = false;
-			if (this.structure.rooms[i]){
-				roomDef = this.structure.rooms[i];
-			} else {
-				roomDef = {type: 'livingQuarters'}
-			}
-			this.addRoom(room.x, room.y, roomDef.type, roomDef.type, room.w, room.h);
+			this.addRoom(room.x, room.y, room.type, room.type, room.w, room.h);
 		}
+		return true;
 	},
 	roomCanGrow: function(room, tempRooms, direction){
 		var testRoom = {
@@ -360,6 +503,14 @@ RoomsGenerator.prototype = {
 				room.h ++;
 				break;
 		}
+	},
+	getRoomAt: function(rooms,x,y){
+		for (var i = 0; i < rooms.length; i++){
+			var room = rooms[i];
+			if (x >= room.x && x < room.x + room.w && y >= room.y && y < room.y + room.h)
+				return room;
+		}
+		return false;
 	},
 	validRoom: function(room, tempRooms, skipRoom){
 		// Must be inside the rooms area

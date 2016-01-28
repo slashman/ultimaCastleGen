@@ -176,6 +176,7 @@ CastleStructureGenerator.prototype = {
 				room.barrels = Random.rand(0,room.filled);
 				room.boxes = room.filled - room.barrels;
 				room.hasOven = Random.chance(50);
+				room.isNextTo = 'diningRoom';
 				break;
 			case 'throneRoom':
 				room.hasCarpet = Random.chance(70);
@@ -183,12 +184,17 @@ CastleStructureGenerator.prototype = {
 				room.linedWithTorches = Random.chance(70);
 				room.hasSecondaryThrone = Random.chance(50);
 				room.hasMagicOrb = Random.chance(50);
+				room.placeNorth = true;
+				room.southRoom = 'throneHall';
+				room.isBig = true;
 				break;
 			case 'lordQuarters':
 				room.piano = Random.chance(50);
 				room.clock = Random.chance(50);
 				room.bookshelf = Random.chance(70);
 				room.fireplace = Random.chance(80);
+				room.placeNorth = true;
+				room.isBig = true;
 				break;
 			case 'hall':
 				room.torches = Random.chance(50);

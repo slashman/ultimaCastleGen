@@ -93,29 +93,29 @@ RoomsGenerator.prototype = {
 			// West corridor
 			this.addRoom(
 				1 + Math.floor(def.size / 2) - Math.floor(connectionWidth/2), 
-				1 + def.size, 
+				1 + def.size - 1, 
 				def.connectionCorridors.type, 'West '+def.connectionCorridors.type, 
 				connectionWidth, 
-				this.generationParams.height - 2 * def.size - 3,
+				this.generationParams.height - 2 * def.size - 1,
 				def.hallDecoration
 			);
 			// East corridor
 			this.addRoom(
 				this.generationParams.width - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2) + ((def.size - connectionWidth)%2 != 0 ? 1 : 0), 
-				1 + def.size, 
+				1 + def.size - 1, 
 				def.connectionCorridors.type, 'East '+def.connectionCorridors.type, 
 				connectionWidth, 
-				this.generationParams.height - 2 * def.size - 3,
+				this.generationParams.height - 2 * def.size - 1,
 				def.hallDecoration
 			);
 		}
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'top'){
 			// North corridor
 			this.addRoom(
-				1 + def.size, 
+				1 + def.size - 1, 
 				1 + Math.floor(def.size / 2) - Math.floor(connectionWidth/2), 
 				def.connectionCorridors.type, 'North '+def.connectionCorridors.type, 
-				this.generationParams.width - 2 * def.size - 3,
+				this.generationParams.width - 2 * def.size - 1,
 				connectionWidth, 
 				def.hallDecoration
 			);
@@ -123,10 +123,10 @@ RoomsGenerator.prototype = {
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom'){
 			// South corridor
 			this.addRoom(
-				1 + def.size, 
+				1 + def.size - 1, 
 				this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2)+ ((def.size - connectionWidth)%2 != 0 ? 1 : 0), 
 				def.connectionCorridors.type, 'South '+def.connectionCorridors.type, 
-				this.generationParams.width - 2 * def.size - 3,
+				this.generationParams.width - 2 * def.size - 1,
 				connectionWidth, 
 				def.hallDecoration
 			);
@@ -181,7 +181,7 @@ RoomsGenerator.prototype = {
 				'entrance',
 				'North Entrance',
 				def.width,
-				entranceLength,
+				entranceLength + 1,
 				def
 			);
 		}
@@ -190,7 +190,7 @@ RoomsGenerator.prototype = {
 			var def = this.structure.entrances.southExit;
 			this.addRoom(
 				Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
-				entranceLength + this.structure.central.height,
+				entranceLength + this.structure.central.height - 1,
 				'entrance',
 				'South Entrance',
 				def.width,
@@ -205,8 +205,9 @@ RoomsGenerator.prototype = {
 		var connectionWidth = def.connectionCorridors.type === 'corridor' ? 3 : def.connectionCorridors.hallWidth;
 		var x = 3;
 		var adjustment = (def.size - connectionWidth)%2 == 0 ? 1 : 0;
+		adjustment = 0;
 		if (def.verticalConnections){
-			x = 1 + Math.floor(def.size / 2) + Math.floor(connectionWidth/2) + adjustment;
+			x = 1 + Math.floor(def.size / 2) + Math.floor(connectionWidth/2) + adjustment - 1;
 		}
 		var y = 3;
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'top'){
@@ -527,8 +528,8 @@ RoomsGenerator.prototype = {
 			if (existingRoom.type === 'tower' || existingRoom.type === 'rooms'){
 				continue;
 			}
-			if (existingRoom.x < room.x + room.w && existingRoom.x + existingRoom.width > room.x &&
-    			existingRoom.y < room.y + room.h && existingRoom.y + existingRoom.height > room.y) {
+			if (existingRoom.x < room.x + room.w - 1 && existingRoom.x + existingRoom.width - 1 > room.x &&
+    			existingRoom.y < room.y + room.h - 1 && existingRoom.y + existingRoom.height - 1 > room.y) {
 				return false;
 			}
 		}
@@ -538,8 +539,8 @@ RoomsGenerator.prototype = {
 			if (skipRoom && skipRoom == existingRoom){
 				continue;
 			}
-			if (existingRoom.x < room.x + room.w && existingRoom.x + existingRoom.w > room.x &&
-    			existingRoom.y < room.y + room.h && existingRoom.y + existingRoom.h > room.y) {
+			if (existingRoom.x < room.x + room.w - 1 && existingRoom.x + existingRoom.w - 1 > room.x &&
+    			existingRoom.y < room.y + room.h - 1 && existingRoom.y + existingRoom.h - 1 > room.y) {
 				return false;
 			}
 		}

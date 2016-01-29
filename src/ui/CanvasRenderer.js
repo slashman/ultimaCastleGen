@@ -1,3 +1,5 @@
+var Cells = require('../Cells');
+
 function CanvasRenderer(config){
 	this.config = config;
 }
@@ -121,70 +123,28 @@ CanvasRenderer.prototype = {
 			context.fillRect(item.x * zoom, item.y * zoom, zoom, zoom);
 		}
 	},
-	drawLevelWithIcons: function(level, canvas){
+	drawLevelWithIcons: function(cells, canvas){
 		var canvas = document.getElementById(canvas);
 		var context = canvas.getContext('2d');
 		context.font="12px Georgia";
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		var zoom = 8;
-		var water = new Image();
-		water.src = 'img/water.png';
-		var fakeWater = new Image();
-		fakeWater.src = 'img/water.png';
-		var solidRock = new Image();
-		solidRock.src = 'img/solidRock.png';
-		var cavernFloor = new Image();
-		cavernFloor.src = 'img/cavernFloor.png';
-		var downstairs = new Image();
-		downstairs.src = 'img/downstairs.png';
-		var upstairs = new Image();
-		upstairs.src = 'img/upstairs.png';
-		var stoneWall = new Image();
-		stoneWall.src = 'img/stoneWall.png';
-		var stoneFloor = new Image();
-		stoneFloor.src = 'img/stoneFloor.png';
-		var bridge = new Image();
-		bridge.src = 'img/bridge.png';
-		var lava = new Image();
-		lava.src = 'img/lava.png';
-		var bat = new Image();
-		bat.src = 'img/bat.png';
-		var lavaLizard = new Image();
-		lavaLizard.src = 'img/lavaLizard.png';
-		var daemon = new Image();
-		daemon.src = 'img/daemon.png';
-		var treasure = new Image();
-		treasure.src = 'img/treasure.png';
-		var tiles = {
-			water: water,
-			fakeWater: fakeWater,
-			solidRock: solidRock,
-			cavernFloor: cavernFloor,
-			downstairs: downstairs,
-			upstairs: upstairs,
-			stoneWall: stoneWall,
-			stoneFloor: stoneFloor,
-			bridge: bridge,
-			lava: lava,
-			bat: bat,
-			lavaLizard: lavaLizard,
-			daemon: daemon,
-			treasure: treasure
-		}
-	    var cells = level.cells;
+		var tiles = {};
+		tiles[Cells.FLOOR] = new Image();
+		tiles[Cells.WALL] = new Image();
+		tiles[Cells.GRASS_1] = new Image();
+		tiles[Cells.GRASS_2] = new Image();
+		tiles[Cells.TREE] = new Image();
+		tiles[Cells.FLOOR].src = 'img/floor.png';
+		tiles[Cells.WALL].src = 'img/wall.png';
+		tiles[Cells.GRASS_1].src = 'img/grass1.png';
+		tiles[Cells.GRASS_2].src = 'img/grass2.png';
+		tiles[Cells.TREE].src = 'img/tree.png';
 		for (var x = 0; x < this.config.LEVEL_WIDTH; x++){
 			for (var y = 0; y < this.config.LEVEL_HEIGHT; y++){
 				var cell = cells[x][y]; 
 				context.drawImage(tiles[cell], x * 16, y * 16);
 			}
-		}
-		for (var i = 0; i < level.enemies.length; i++){
-			var enemy = level.enemies[i];
-			context.drawImage(tiles[enemy.code], enemy.x * 16, enemy.y * 16);
-		}
-		for (var i = 0; i < level.items.length; i++){
-			var item = level.items[i];
-			context.drawImage(tiles['treasure'], item.x * 16, item.y * 16);
 		}
 	}
 }

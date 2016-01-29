@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/home/administrator/git/ultimacastlegen/src/Arrays.js":[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = {
     shuffle: function(array) {
         var counter = array.length;
@@ -18,9 +18,16 @@ module.exports = {
         }
 
         return array;
+    },
+    removeObject: function(array, object){
+        for(var i = 0; i < array.length; i++) {
+            if(array[i] === object) {
+               array.splice(i, 1);
+            }
+        }
     }
 }
-},{}],"/home/administrator/git/ultimacastlegen/src/CastleStructureGenerator.js":[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 var Random = require('./Random');
 
 function CastleStructureGenerator(){};
@@ -40,7 +47,8 @@ CastleStructureGenerator.prototype = {
 	},
 	selectGeneral: function(){
 		return {
-			size: Random.chance(80) ? 'big' : 'small'
+			size: Random.chance(80) ? 'big' : 'small',
+			superSymmetric: Random.chance(20)
 		}
 	},
 	selectSurroundings: function(){
@@ -198,6 +206,7 @@ CastleStructureGenerator.prototype = {
 				room.barrels = Random.rand(0,room.filled);
 				room.boxes = room.filled - room.barrels;
 				room.hasOven = Random.chance(50);
+				room.isNextTo = 'diningRoom';
 				break;
 			case 'throneRoom':
 				room.hasCarpet = Random.chance(70);
@@ -205,12 +214,17 @@ CastleStructureGenerator.prototype = {
 				room.linedWithTorches = Random.chance(70);
 				room.hasSecondaryThrone = Random.chance(50);
 				room.hasMagicOrb = Random.chance(50);
+				room.placeNorth = true;
+				room.southRoom = 'throneHall';
+				room.isBig = true;
 				break;
 			case 'lordQuarters':
 				room.piano = Random.chance(50);
 				room.clock = Random.chance(50);
 				room.bookshelf = Random.chance(70);
 				room.fireplace = Random.chance(80);
+				room.placeNorth = true;
+				room.isBig = true;
 				break;
 			case 'hall':
 				room.torches = Random.chance(50);
@@ -257,9 +271,19 @@ CastleStructureGenerator.prototype = {
 }
 
 module.exports = CastleStructureGenerator;
-},{"./Random":"/home/administrator/git/ultimacastlegen/src/Random.js"}],"/home/administrator/git/ultimacastlegen/src/MapGenerator.js":[function(require,module,exports){
+},{"./Random":5}],3:[function(require,module,exports){
+module.exports = {
+	WALL: 'wall',
+	FLOOR: 'floor',
+	GRASS_1: 'grass1',
+	GRASS_2: 'grass2',
+	TREE: 'tree'
+};
+},{}],4:[function(require,module,exports){
 var CastleStructureGenerator = require('./CastleStructureGenerator');
 var RoomsGenerator = require('./RoomsGenerator');
+var RoomBuilder = require('./RoomBuilder');
+var TerrainGenerator = require('./TerrainGenerator');
 
 function MapGenerator(){
 
@@ -270,16 +294,19 @@ MapGenerator.prototype = {
 		this.generationParams = generationParams;
 		this.castleStructureGenerator = new CastleStructureGenerator();
 		this.roomsGenerator = new RoomsGenerator();
+		this.terrainGenerator = new TerrainGenerator();
+		this.roomBuilder = new RoomBuilder();
 		var castle = {};
 		castle.structure = this.castleStructureGenerator.generateMap(generationParams);
 		castle.rooms = this.roomsGenerator.generateMap(castle.structure, generationParams);
+		castle.map = this.terrainGenerator.generateTerrain(generationParams);
+		this.roomBuilder.buildRooms(castle.map, castle.rooms);
 		return castle;
 	}
 }
 
-window.MapGenerator = MapGenerator;
 module.exports = MapGenerator;
-},{"./CastleStructureGenerator":"/home/administrator/git/ultimacastlegen/src/CastleStructureGenerator.js","./RoomsGenerator":"/home/administrator/git/ultimacastlegen/src/RoomsGenerator.js"}],"/home/administrator/git/ultimacastlegen/src/Random.js":[function(require,module,exports){
+},{"./CastleStructureGenerator":2,"./RoomBuilder":6,"./RoomsGenerator":7,"./TerrainGenerator":8}],5:[function(require,module,exports){
 module.exports = {
 	rand: function(low, hi){
 		return Math.floor(Math.random() * (hi - low + 1))+low;
@@ -291,7 +318,72 @@ module.exports = {
 		return this.rand(0,100) <= chance;
 	}
 }
-},{}],"/home/administrator/git/ultimacastlegen/src/RoomsGenerator.js":[function(require,module,exports){
+},{}],6:[function(require,module,exports){
+var Random = require('./Random');
+var Arrays = require('./Arrays');
+var Cells = require('./Cells');
+
+function RoomBuilder(){};
+
+RoomBuilder.prototype = {
+	buildRooms: function(map, rooms){
+		this.map = map;
+		for (var i = 0; i < rooms.length; i++){
+			this.buildRoom(rooms[i]);
+		}
+	},
+	buildRoom: function(room){
+		for (var x = room.x; x < room.x + room.width; x++){
+			for (var y = room.y; y < room.y + room.height; y++){
+				if (x == room.x || x == room.x + room.width - 1 || y == room.y || y == room.y + room.height - 1){
+					this.map[x][y] = Cells.WALL;
+				} else {
+					this.map[x][y] = Cells.FLOOR;
+				}
+			}
+		}
+	},
+	build_tower: function(room){
+		for (var x = room.x; x < room.x + room.widthidth; x++){
+			for (var y = room.y; y < room.y + room.heighteight; y++){
+				var wall = false;
+				if (x == room.x){
+					wall = room.widthalls.west;
+				} else if (x == room.x + room.width - 1){
+					wall = room.widthalls.east;
+				} else if (y == room.y){
+					wall = room.widthalls.north;
+				} else if (y == room.y + room.height - 1){
+					wall = room.widthalls.south;
+				}
+				if (wall){
+					if (wall === 'solid'){
+						this.map[x][y] = Cells.WALL;
+					} else if (wall === 'crossWindows'){
+						if (x === room.x + Math.floor((room.x+room.width)/2) ||
+							y === room.y + Math.floor((room.y+room.height)/2))
+							this.map[x][y] = Cells.CROSS_WINDOW;
+						else
+							this.map[x][y] = Cells.WALL;
+					} else if (wall === 'exit'){	
+						if (x === room.x + Math.floor((room.x+room.width)/2) ||
+							y === room.y + Math.floor((room.y+room.height)/2))
+							this.map[x][y] = Cells.DOOR;
+						else
+							this.map[x][y] = Cells.WALL;
+					} else if (wall === 'open'){
+						this.map[x][y] = Cells.FLOOR;
+					}
+				} else {
+					this.map[x][y] = Cells.FLOOR;
+				}
+			}
+		}
+	}
+}
+
+module.exports = RoomBuilder;
+},{"./Arrays":1,"./Cells":3,"./Random":5}],7:[function(require,module,exports){
 var Random = require('./Random');
 var Arrays = require('./Arrays');
 
@@ -305,7 +397,20 @@ RoomsGenerator.prototype = {
 		this.placeTowers();
 		this.placeCentralFeature();
 		this.placeEntrances();
-		this.placeRooms();
+		var retries = 0;
+		while(true){
+			var emptyRooms = this.placeRooms();
+			var assigned = this.assignRooms(emptyRooms);
+			if (!assigned){
+				if (retries++ < 50){
+					continue;
+				} else {
+					this.assignRooms(emptyRooms, true);
+				}
+			}
+			break;
+		}
+		
 		return this.rooms;
 	},
 	placeTowers: function(){
@@ -374,29 +479,29 @@ RoomsGenerator.prototype = {
 			// West corridor
 			this.addRoom(
 				1 + Math.floor(def.size / 2) - Math.floor(connectionWidth/2), 
-				1 + def.size, 
+				1 + def.size - 1, 
 				def.connectionCorridors.type, 'West '+def.connectionCorridors.type, 
 				connectionWidth, 
-				this.generationParams.height - 2 * def.size - 3,
+				this.generationParams.height - 2 * def.size - 1,
 				def.hallDecoration
 			);
 			// East corridor
 			this.addRoom(
 				this.generationParams.width - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2) + ((def.size - connectionWidth)%2 != 0 ? 1 : 0), 
-				1 + def.size, 
+				1 + def.size - 1, 
 				def.connectionCorridors.type, 'East '+def.connectionCorridors.type, 
 				connectionWidth, 
-				this.generationParams.height - 2 * def.size - 3,
+				this.generationParams.height - 2 * def.size - 1,
 				def.hallDecoration
 			);
 		}
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'top'){
 			// North corridor
 			this.addRoom(
-				1 + def.size, 
+				1 + def.size - 1, 
 				1 + Math.floor(def.size / 2) - Math.floor(connectionWidth/2), 
 				def.connectionCorridors.type, 'North '+def.connectionCorridors.type, 
-				this.generationParams.width - 2 * def.size - 3,
+				this.generationParams.width - 2 * def.size - 1,
 				connectionWidth, 
 				def.hallDecoration
 			);
@@ -404,10 +509,10 @@ RoomsGenerator.prototype = {
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom'){
 			// South corridor
 			this.addRoom(
-				1 + def.size, 
+				1 + def.size - 1, 
 				this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2)+ ((def.size - connectionWidth)%2 != 0 ? 1 : 0), 
 				def.connectionCorridors.type, 'South '+def.connectionCorridors.type, 
-				this.generationParams.width - 2 * def.size - 3,
+				this.generationParams.width - 2 * def.size - 1,
 				connectionWidth, 
 				def.hallDecoration
 			);
@@ -462,7 +567,7 @@ RoomsGenerator.prototype = {
 				'entrance',
 				'North Entrance',
 				def.width,
-				entranceLength,
+				entranceLength + 1,
 				def
 			);
 		}
@@ -471,7 +576,7 @@ RoomsGenerator.prototype = {
 			var def = this.structure.entrances.southExit;
 			this.addRoom(
 				Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
-				entranceLength + this.structure.central.height,
+				entranceLength + this.structure.central.height - 1,
 				'entrance',
 				'South Entrance',
 				def.width,
@@ -486,8 +591,9 @@ RoomsGenerator.prototype = {
 		var connectionWidth = def.connectionCorridors.type === 'corridor' ? 3 : def.connectionCorridors.hallWidth;
 		var x = 3;
 		var adjustment = (def.size - connectionWidth)%2 == 0 ? 1 : 0;
+		adjustment = 0;
 		if (def.verticalConnections){
-			x = 1 + Math.floor(def.size / 2) + Math.floor(connectionWidth/2) + adjustment;
+			x = 1 + Math.floor(def.size / 2) + Math.floor(connectionWidth/2) + adjustment - 1;
 		}
 		var y = 3;
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'top'){
@@ -502,7 +608,8 @@ RoomsGenerator.prototype = {
 			y,
 			'rooms',
 			'',
-			Math.floor(this.generationParams.width / 2) - x,
+			//Math.floor(this.generationParams.width / 2) - x,
+			this.generationParams.width -  2 * x - 1,
 			yEnd - y + 1
 		);*/
 		var area = {
@@ -540,6 +647,23 @@ RoomsGenerator.prototype = {
 			addedRooms = [];
 		}
 		
+		// Is the castle super symmetric? if not, we mirror the rooms before making them grow, and extend the play area
+		if (!this.structure.general.superSymmetric){
+			var originalRoomsCount = addedRooms.length;
+			// Mirror the added rooms over the y axis
+			for (var i = 0; i < originalRoomsCount; i++){
+				var room = addedRooms[i];
+				var dist = this.roomsArea.x + this.roomsArea.w - (room.x + room.w);
+				addedRooms.push({
+					x: this.roomsArea.x + this.roomsArea.w + dist - 1,
+					y: room.y,
+					w: room.w,
+					h: room.h
+				});
+			}
+			area.w = this.generationParams.width - 2 * x;
+		}
+
 		while(true){
 			//Try to make each room bigger in a direction, until it's not possible for any
 			var grew = false;
@@ -565,31 +689,164 @@ RoomsGenerator.prototype = {
 			}
 		}
 		
-		var originalRoomsCount = addedRooms.length;
-		// Mirror the added rooms over the y axis
-		for (var i = 0; i < originalRoomsCount; i++){
-			var room = addedRooms[i];
-			var dist = this.roomsArea.x + this.roomsArea.w - (room.x + room.w);
-			addedRooms.push({
-				x: this.roomsArea.x + this.roomsArea.w + dist - 1,
-				y: room.y,
-				w: room.w,
-				h: room.h
-			});
+		// If the castle is super symmetric, mirror them now (after growing)
+		if (this.structure.general.superSymmetric){
+			var originalRoomsCount = addedRooms.length;
+			// Mirror the added rooms over the y axis
+			for (var i = 0; i < originalRoomsCount; i++){
+				var room = addedRooms[i];
+				var dist = this.roomsArea.x + this.roomsArea.w - (room.x + room.w);
+				addedRooms.push({
+					x: this.roomsArea.x + this.roomsArea.w + dist - 1,
+					y: room.y,
+					w: room.w,
+					h: room.h
+				});
+			}
+		}
+		return addedRooms;
+	},
+	assignRooms: function(rooms, force){
+		/** We now have a lot of empty rooms, give a function to each based on the super structure
+		 * We will try several times
+		 * Following room attributes are relevant:
+		 * placeNorth: boolean - Room must be placed as north as possible
+		 * isNextTo: string - Room must be placed as close as possible to a room with the given code
+		 * southRoom: string - If there is a room in the southern exit of this room, it has to be one of the given code. Only for "placeNorth" rooms
+		 * isBig: boolean - Pick one of the rooms with greatest area
+		 */
+
+		// Do we have enough big rooms in the north to satisfy requirements, can we whine?
+		if (!force){
+			var bigHeightThreshold = 8;
+			var bigNorthRequiredRooms = 0;
+			var northRequiredRooms = 0;
+			var bigRequiredRooms = 0;
+			var bigNorthAvailableRooms = 0;
+			var northAvailableRooms = 0;
+			var bigAvailableRooms = 0;
+
+			// Gather requirements
+			for (var i = 0; i < this.structure.rooms.length; i++){
+				var room = this.structure.rooms[i];
+				if (room.placeNorth){
+					if (room.isBig){
+						bigNorthRequiredRooms++;
+					} else {
+						northRequiredRooms++;
+					}
+				} else if (room.isBig){
+					bigRequiredRooms++;
+				} 
+			}
+			
+			// Sum available rooms
+			for (var i = 0; i < rooms.length; i++){
+				var room = rooms[i];
+				if (room.y == this.roomsArea.y){
+					if (room.h > bigHeightThreshold)
+						bigNorthAvailableRooms ++;
+					else
+						northAvailableRooms ++;
+				} else if (room.h > bigHeightThreshold)
+					bigAvailableRooms ++;
+			}
+
+			// Check if we comply
+			if (bigNorthAvailableRooms < bigNorthRequiredRooms || 
+				northAvailableRooms < northRequiredRooms ||
+				bigAvailableRooms < bigRequiredRooms)
+				return false; // Give me better rooms!
 		}
 
-		this.structure.rooms = Arrays.shuffle(this.structure.rooms);
-		// We either suceeded or failed; remaining space should be small corridors
+		var addedRooms = []; //TODO: Remove
+		
+		// Split the rooms by category
+		var northAvailableRooms = [];
+		var northBigAvailableRooms = [];
+		var bigAvailableRooms = [];
+		var otherAvailableRooms = [];
+		for (var i = 0; i < rooms.length; i++){
+			var room = rooms[i];
+			if (room.y == this.roomsArea.y){
+				if (room.h > bigHeightThreshold){
+					northBigAvailableRooms.push(room);
+				} else {
+					northAvailableRooms.push(room);
+				}
+			} else {
+				if (room.h > bigHeightThreshold){
+					bigAvailableRooms.push(room);
+				} else {
+					otherAvailableRooms.push(room);
+				}
+			}
+		}
+
+		// Shuffle the rooms
+		var roomsToAdd = Arrays.shuffle(this.structure.rooms);
+		// but place rooms with southRoom first
+		roomsToAdd = roomsToAdd.sort(function(a, b){
+			return (a.southRoom && b.southRoom) ? 0 : a.southRoom ? -1 : 1;
+		});
+		for (var i = 0; i < roomsToAdd.length; i++){
+			var requiredRoom = roomsToAdd[i];
+			var room = false;
+			if (requiredRoom.placeNorth){
+				if (requiredRoom.isBig || northAvailableRooms.length == 0){
+					room = Random.randomElementOf(northBigAvailableRooms);
+				} else {
+					room = Random.randomElementOf(northAvailableRooms);
+				}
+			} else if (requiredRoom.isBig){
+				room = Random.randomElementOf(bigAvailableRooms);
+			} else {
+				room = Random.randomElementOf(otherAvailableRooms);
+			}
+			if (!room){
+				// Couldn't pick from preferred? pick from any available!!
+				if (otherAvailableRooms.length) room = Random.randomElementOf(otherAvailableRooms);
+				if (northBigAvailableRooms.length) room = Random.randomElementOf(northBigAvailableRooms);
+				if (northAvailableRooms.length) room = Random.randomElementOf(northAvailableRooms);
+				if (bigAvailableRooms.length) room = Random.randomElementOf(bigAvailableRooms);
+			}
+			// Remove used space
+			Arrays.removeObject(northBigAvailableRooms, room);
+			Arrays.removeObject(northAvailableRooms, room); 
+			Arrays.removeObject(bigAvailableRooms, room); 
+			Arrays.removeObject(otherAvailableRooms, room);
+			if (room){
+				addedRooms.push({x: room.x, y: room.y, name: requiredRoom.type, type: requiredRoom.type, w: room.w, h: room.h});	
+				// Place south rooms
+				if (requiredRoom.southRoom){
+					var southRoom = this.getRoomAt(rooms, room.x + Math.floor(room.w/2), room.y + room.h+2);
+					if (!southRoom){
+						// There's probably a hall, or the central feature which is fine.
+					} else {
+						addedRooms.push({x: southRoom.x, y: southRoom.y, name: requiredRoom.southRoom, type: requiredRoom.southRoom, w: southRoom.w, h: southRoom.h});
+						Arrays.removeObject(bigAvailableRooms, southRoom); // Available space used
+						Arrays.removeObject(otherAvailableRooms, southRoom); // Available space used
+					}
+				}
+			} else {
+				console.log("No room for "+requiredRoom.type)
+			}
+		}
+
+		// Fill unused rooms with halls (?)
+		var remainingRooms = northBigAvailableRooms.concat(northAvailableRooms).concat(bigAvailableRooms).concat(otherAvailableRooms);
+		for (var i = 0; i < remainingRooms.length; i++){
+			var availableRoom = remainingRooms[i];
+			addedRooms.push({x: availableRoom.x, y: availableRoom.y, name: 'hall*', type: 'hall*', w: availableRoom.w, h: availableRoom.h});
+		}
+			
+		// Officially add the rooms
+		// TODO: Not needed anymore
 		for (var i = 0; i < addedRooms.length; i++){
 			var room = addedRooms[i];
-			var roomDef = false;
-			if (this.structure.rooms[i]){
-				roomDef = this.structure.rooms[i];
-			} else {
-				roomDef = {type: 'livingQuarters'}
-			}
-			this.addRoom(room.x, room.y, roomDef.type, roomDef.type, room.w, room.h);
+			this.addRoom(room.x, room.y, room.type, room.type, room.w, room.h);
 		}
+		return true;
 	},
 	roomCanGrow: function(room, tempRooms, direction){
 		var testRoom = {
@@ -634,6 +891,14 @@ RoomsGenerator.prototype = {
 				break;
 		}
 	},
+	getRoomAt: function(rooms,x,y){
+		for (var i = 0; i < rooms.length; i++){
+			var room = rooms[i];
+			if (x >= room.x && x < room.x + room.w && y >= room.y && y < room.y + room.h)
+				return room;
+		}
+		return false;
+	},
 	validRoom: function(room, tempRooms, skipRoom){
 		// Must be inside the rooms area
 		if (room.x >= this.roomsArea.x && room.x + room.w <= this.roomsArea.x + this.roomsArea.w &&
@@ -649,8 +914,8 @@ RoomsGenerator.prototype = {
 			if (existingRoom.type === 'tower' || existingRoom.type === 'rooms'){
 				continue;
 			}
-			if (existingRoom.x < room.x + room.w && existingRoom.x + existingRoom.width > room.x &&
-    			existingRoom.y < room.y + room.h && existingRoom.y + existingRoom.height > room.y) {
+			if (existingRoom.x < room.x + room.w - 1 && existingRoom.x + existingRoom.width - 1 > room.x &&
+    			existingRoom.y < room.y + room.h - 1 && existingRoom.y + existingRoom.height - 1 > room.y) {
 				return false;
 			}
 		}
@@ -660,8 +925,8 @@ RoomsGenerator.prototype = {
 			if (skipRoom && skipRoom == existingRoom){
 				continue;
 			}
-			if (existingRoom.x < room.x + room.w && existingRoom.x + existingRoom.w > room.x &&
-    			existingRoom.y < room.y + room.h && existingRoom.y + existingRoom.h > room.y) {
+			if (existingRoom.x < room.x + room.w - 1 && existingRoom.x + existingRoom.w - 1 > room.x &&
+    			existingRoom.y < room.y + room.h - 1 && existingRoom.y + existingRoom.h - 1 > room.y) {
 				return false;
 			}
 		}
@@ -681,7 +946,36 @@ RoomsGenerator.prototype = {
 }
 
 module.exports = RoomsGenerator;
-},{"./Arrays":"/home/administrator/git/ultimacastlegen/src/Arrays.js","./Random":"/home/administrator/git/ultimacastlegen/src/Random.js"}],"/home/administrator/git/ultimacastlegen/src/ui/CanvasRenderer.js":[function(require,module,exports){
+},{"./Arrays":1,"./Random":5}],8:[function(require,module,exports){
+var Random = require('./Random');
+var Cells = require('./Cells');
+
+function TerrainGenerator(){
+
+};
+
+TerrainGenerator.prototype = {
+	generateTerrain: function(generationParams){
+		var map = [];
+		for (var x = 0; x < generationParams.width; x++){
+			map[x] = [];
+			for (var y = 0; y < generationParams.height; y++){
+				if (Random.chance(80))
+					map[x][y] = Cells.GRASS_1;
+				else if (Random.chance(80))
+					map[x][y] = Cells.GRASS_2;
+				else
+					map[x][y] = Cells.TREE;
+			}
+		}
+		return map;
+	}
+}
+
+module.exports = TerrainGenerator;
+},{"./Cells":3,"./Random":5}],9:[function(require,module,exports){
+var Cells = require('../Cells');
+
 function CanvasRenderer(config){
 	this.config = config;
 }
@@ -805,76 +1099,34 @@ CanvasRenderer.prototype = {
 			context.fillRect(item.x * zoom, item.y * zoom, zoom, zoom);
 		}
 	},
-	drawLevelWithIcons: function(level, canvas){
+	drawLevelWithIcons: function(cells, canvas){
 		var canvas = document.getElementById(canvas);
 		var context = canvas.getContext('2d');
 		context.font="12px Georgia";
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		var zoom = 8;
-		var water = new Image();
-		water.src = 'img/water.png';
-		var fakeWater = new Image();
-		fakeWater.src = 'img/water.png';
-		var solidRock = new Image();
-		solidRock.src = 'img/solidRock.png';
-		var cavernFloor = new Image();
-		cavernFloor.src = 'img/cavernFloor.png';
-		var downstairs = new Image();
-		downstairs.src = 'img/downstairs.png';
-		var upstairs = new Image();
-		upstairs.src = 'img/upstairs.png';
-		var stoneWall = new Image();
-		stoneWall.src = 'img/stoneWall.png';
-		var stoneFloor = new Image();
-		stoneFloor.src = 'img/stoneFloor.png';
-		var bridge = new Image();
-		bridge.src = 'img/bridge.png';
-		var lava = new Image();
-		lava.src = 'img/lava.png';
-		var bat = new Image();
-		bat.src = 'img/bat.png';
-		var lavaLizard = new Image();
-		lavaLizard.src = 'img/lavaLizard.png';
-		var daemon = new Image();
-		daemon.src = 'img/daemon.png';
-		var treasure = new Image();
-		treasure.src = 'img/treasure.png';
-		var tiles = {
-			water: water,
-			fakeWater: fakeWater,
-			solidRock: solidRock,
-			cavernFloor: cavernFloor,
-			downstairs: downstairs,
-			upstairs: upstairs,
-			stoneWall: stoneWall,
-			stoneFloor: stoneFloor,
-			bridge: bridge,
-			lava: lava,
-			bat: bat,
-			lavaLizard: lavaLizard,
-			daemon: daemon,
-			treasure: treasure
-		}
-	    var cells = level.cells;
+		var tiles = {};
+		tiles[Cells.FLOOR] = new Image();
+		tiles[Cells.WALL] = new Image();
+		tiles[Cells.GRASS_1] = new Image();
+		tiles[Cells.GRASS_2] = new Image();
+		tiles[Cells.TREE] = new Image();
+		tiles[Cells.FLOOR].src = 'img/floor.png';
+		tiles[Cells.WALL].src = 'img/wall.png';
+		tiles[Cells.GRASS_1].src = 'img/grass1.png';
+		tiles[Cells.GRASS_2].src = 'img/grass2.png';
+		tiles[Cells.TREE].src = 'img/tree.png';
 		for (var x = 0; x < this.config.LEVEL_WIDTH; x++){
 			for (var y = 0; y < this.config.LEVEL_HEIGHT; y++){
 				var cell = cells[x][y]; 
 				context.drawImage(tiles[cell], x * 16, y * 16);
 			}
 		}
-		for (var i = 0; i < level.enemies.length; i++){
-			var enemy = level.enemies[i];
-			context.drawImage(tiles[enemy.code], enemy.x * 16, enemy.y * 16);
-		}
-		for (var i = 0; i < level.items.length; i++){
-			var item = level.items[i];
-			context.drawImage(tiles['treasure'], item.x * 16, item.y * 16);
-		}
 	}
 }
 
 module.exports = CanvasRenderer;
-},{}],"/home/administrator/git/ultimacastlegen/src/ui/WebAdapter.js":[function(require,module,exports){
+},{"../Cells":3}],10:[function(require,module,exports){
 window.MapGenerator = require('../MapGenerator');
 window.CanvasRenderer = require('./CanvasRenderer');
-},{"../MapGenerator":"/home/administrator/git/ultimacastlegen/src/MapGenerator.js","./CanvasRenderer":"/home/administrator/git/ultimacastlegen/src/ui/CanvasRenderer.js"}]},{},["/home/administrator/git/ultimacastlegen/src/ui/WebAdapter.js"]);
+},{"../MapGenerator":4,"./CanvasRenderer":9}]},{},[10]);

@@ -8,6 +8,7 @@ RoomsGenerator.prototype = {
 		this.structure = structure;
 		this.generationParams = generationParams;
 		this.rooms = [];
+		this.placeFoundations();
 		this.placeTowers();
 		this.placeCentralFeature();
 		this.placeEntrances();
@@ -24,9 +25,35 @@ RoomsGenerator.prototype = {
 			}
 			break;
 		}
-		
 		return this.rooms;
 	},
+	placeFoundations: function(){
+		var def = this.structure.towers;
+		var connectionWidth = def.connectionCorridors.type === 'corridor' ? 3 : def.connectionCorridors.hallWidth;
+		var x = 3;
+		if (def.verticalConnections){
+			x = 1 + Math.floor(def.size / 2) + Math.floor(connectionWidth/2) - 1;
+		}
+		var y = 3;
+		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'top'){
+			y = 1 + Math.floor(def.size / 2) + Math.floor(connectionWidth/2);
+		}
+		var yEnd = this.generationParams.height - 5;
+		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom'){
+			yEnd = this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2);
+		}
+		this.addRoom(
+			x,
+			y,
+			'rooms',
+			'',
+			this.generationParams.width -  2 * x - 1,
+			yEnd - y + 1,
+			{},
+			-1
+		);
+	},
+
 	placeTowers: function(){
 		var def = this.structure.towers;
 		/*
@@ -57,7 +84,7 @@ RoomsGenerator.prototype = {
 				south: def.verticalConnections ? 'exit' : 'solid',
 				east: def.horizontalConnections === 'both' || def.horizontalConnections === 'top' ? 'exit' : 'solid'
 			}
-		});
+		}, 1);
 		//NE
 		this.addRoom(this.generationParams.width - def.size - 2, 1,'tower', 'Northeast Tower', def.size, def.size, {
 			shape: def.circle ? 'circle' : 'square',
@@ -67,7 +94,7 @@ RoomsGenerator.prototype = {
 				south: def.verticalConnections ? 'exit' : 'solid',
 				west: def.horizontalConnections === 'both' || def.horizontalConnections === 'top' ? 'exit' : 'solid'
 			}
-		});
+		}, 1);
 		//SW
 		this.addRoom(1, this.generationParams.height - def.size - 2,'tower', 'Southwest Tower', def.size, def.size, {
 			shape: def.circle ? 'circle' : 'square',
@@ -77,7 +104,7 @@ RoomsGenerator.prototype = {
 				north: def.verticalConnections ? 'exit' : 'solid',
 				east: def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom' ? 'exit' : 'solid'
 			}
-		});
+		}, 1);
 		//SE
 		this.addRoom(this.generationParams.width - def.size - 2, this.generationParams.height - def.size - 2,'tower', 'Southeast Tower', def.size, def.size, {
 			shape: def.circle ? 'circle' : 'square',
@@ -87,7 +114,7 @@ RoomsGenerator.prototype = {
 				north: def.verticalConnections ? 'exit' : 'solid',
 				west: def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom' ? 'exit' : 'solid'
 			}
-		});
+		}, 1);
 		var connectionWidth = def.connectionCorridors.type === 'corridor' ? 3 : def.connectionCorridors.hallWidth;
 		if (def.verticalConnections){
 			// West corridor
@@ -182,7 +209,8 @@ RoomsGenerator.prototype = {
 				'North Entrance',
 				def.width,
 				entranceLength + 1,
-				def
+				def,
+				1
 			);
 		}
 		// South Entrance
@@ -195,7 +223,8 @@ RoomsGenerator.prototype = {
 				'South Entrance',
 				def.width,
 				entranceLength,
-				def
+				def,
+				1
 			);
 		}
 
@@ -275,7 +304,7 @@ RoomsGenerator.prototype = {
 					h: room.h
 				});
 			}
-			area.w = this.generationParams.width - 2 * x;
+			area.w = this.generationParams.width - 2 * x - 1;
 		}
 
 		while(true){
@@ -546,7 +575,7 @@ RoomsGenerator.prototype = {
 		}
 		return true;
 	},
-	addRoom: function(x, y, type, name, width, height, features){
+	addRoom: function(x, y, type, name, width, height, features, level){
 		this.rooms.push({
 			x: x,
 			y: y,
@@ -554,7 +583,8 @@ RoomsGenerator.prototype = {
 			name: name,
 			width: width,
 			height: height,
-			features: features
+			features: features,
+			level: level
 		});
 	}
 }

@@ -7,6 +7,7 @@ function RoomBuilder(){};
 RoomBuilder.prototype = {
 	buildRooms: function(map, rooms){
 		this.map = map;
+		rooms = rooms.sort(function(a,b){var aLevel = a.level ? a.level : 0; var bLevel = b.level ? b.level : 0; return aLevel - bLevel;});
 		for (var i = 0; i < rooms.length; i++){
 			this.buildRoom(rooms[i]);
 		}

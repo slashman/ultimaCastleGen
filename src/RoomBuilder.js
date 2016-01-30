@@ -74,6 +74,55 @@ RoomBuilder.prototype = {
 				}
 			}
 		}
+	},
+	build_courtyard: function(room){
+		/*
+			centralFeature: 'fountain', // 'fountain' / 'well'
+			additionalFountains: true, // only for 'fountain'
+			fountainSymmetry: 'x', // Only for 'fountain' with additionalFountains ['x', 'y', 'full'];
+			hasSmallLake: false // only for 'fountain'
+			connectionWithRooms: {
+				type: 'radial' // ['radial', 'around'],
+				terrain: 'floor'  // ['floor', 'dirt'])
+			},
+		*/
+		for (var x = room.x; x < room.x + room.width; x++){
+			for (var y = room.y; y < room.y + room.height; y++){
+				if (x == room.x || x == room.x + room.width - 1 || y == room.y || y == room.y + room.height - 1){
+					this.map[x][y] = Cells.WALL;
+				} else {
+					if (Random.chance(80))
+						this.map[x][y] = Cells.GRASS_1;
+					else if (Random.chance(80))
+						this.map[x][y] = Cells.GRASS_2;
+					else
+						this.map[x][y] = Cells.TREE;
+				}
+			}
+		}
+		var midx = room.x+Math.floor(room.width/2);
+		var midy = room.y+Math.floor(room.height/2);
+		var connectionTerrain = room.features.connectionWithRooms.terrain;
+		if (room.features.connectionWithRooms.type === 'radial'){
+			for (var x = room.x; x < room.x + room.width; x++){
+				this.map[x][midy-1] = connectionTerrain;
+				this.map[x][midy] = connectionTerrain;
+				this.map[x][midy+1] = connectionTerrain;
+			}
+			for (var y = room.y; y < room.y + room.height; y++){
+				this.map[midx-1][y] = connectionTerrain;
+				this.map[midx][y] = connectionTerrain;
+				this.map[midx+1][y] = connectionTerrain;
+			}
+		} else if (room.features.connectionWithRooms.type === 'around'){
+
+		}
+		// connections
+		if (room.features.centralFeature === 'fountain'){
+			this.map[midx][midy] = Cells.FOUNTAIN;
+		} else if (room.features.centralFeature === 'well'){
+			this.map[midx][midy] = Cells.WELL;
+		}
 	}
 }
 

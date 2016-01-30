@@ -6,5 +6,8 @@ module.exports = {
 	GRASS_2: 'grass2',
 	TREE: 'tree',
 	DOOR: 'door',
-	CROSS_WINDOW: 'crossWindow'
+	CROSS_WINDOW: 'crossWindow',
+	FOUNTAIN: 'fountain',
+	WELL: 'well',
+	DIRT: 'dirt'
 };

@@ -40,9 +40,13 @@ CastleStructureGenerator.prototype = {
 		entranceStructure.hasCrossWindows = Random.chance(50);
 		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
 		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
+		entranceStructure.isMain = mainEntrance;
 		entranceStructure.width = this.castle.central.width - Random.rand(3, 6) * 2;
 		if (entranceStructure.width < 3)
 			entranceStructure.width = 3;
+		entranceStructure.openingWidth = Random.rand(1,entranceStructure.width-2);
+		if (entranceStructure.openingWidth % 2 == 0)
+			entranceStructure.openingWidth--;
 		return entranceStructure;
 	},
 	selectTowers: function(){

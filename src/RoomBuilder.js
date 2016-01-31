@@ -196,6 +196,35 @@ RoomBuilder.prototype = {
 				this.map[midx + 2][midy + 2] = Cells.FOUNTAIN;
 			}
 		}
+	},
+	build_entrance: function(room){
+		/*
+		entranceStructure.hasFloor = Random.chance(50);
+		entranceStructure.hasCrossWindows = Random.chance(50);
+		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
+		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
+		entranceStructure.isMain = mainEntrance;
+		entranceStructure.width = this.castle.central.width - Random.rand(3, 6) * 2;
+		if (entranceStructure.width < 3)
+			entranceStructure.width = 3;
+		*/
+		var halfOpening = Math.floor((room.width - room.features.openingWidth) / 2);
+		console.log("halfOpening", halfOpening);
+		for (var x = room.x; x < room.x + room.width; x++){
+			for (var y = room.y; y < room.y + room.height; y++){
+				if (x == room.x || x == room.x + room.width - 1){
+					this.map[x][y] = Cells.WALL;
+				} else if ((room.features.isMain && y == room.y) || (!room.features.isMain && y == room.y + room.height - 1) ){
+					if (x >= room.x+halfOpening && x <= room.x + room.width - halfOpening-1){
+						this.map[x][y] = Cells.FLOOR;
+					} else {
+						this.map[x][y] = Cells.WALL;
+					}
+				} else {
+					this.map[x][y] = Cells.FLOOR;
+				}
+			}
+		}
 	}
 }
 

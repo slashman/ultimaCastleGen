@@ -8,6 +8,8 @@ module.exports = {
 	DOOR: 'door',
 	CROSS_WINDOW: 'crossWindow',
 	FOUNTAIN: 'fountain',
+	WATER: 'water',
 	WELL: 'well',
-	DIRT: 'dirt'
+	DIRT: 'dirt',
+	FIREPLACE: 'fireplace',
 };

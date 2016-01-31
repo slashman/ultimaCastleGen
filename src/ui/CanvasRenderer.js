@@ -68,6 +68,8 @@ CanvasRenderer.prototype = {
 		tiles[Cells.FOUNTAIN] = new Image();
 		tiles[Cells.WELL] = new Image();
 		tiles[Cells.DIRT] = new Image();
+		tiles[Cells.WATER] = new Image();
+		tiles[Cells.FIREPLACE] = new Image();
 		tiles[Cells.FLOOR].src = 'img/floor.png';
 		tiles[Cells.FLOOR_2].src = 'img/floor2.png';
 		tiles[Cells.WALL].src = 'img/wall.png';
@@ -79,6 +81,8 @@ CanvasRenderer.prototype = {
 		tiles[Cells.FOUNTAIN].src = 'img/fountain.png';
 		tiles[Cells.WELL].src = 'img/well.png';
 		tiles[Cells.DIRT].src = 'img/dirt.png';
+		tiles[Cells.WATER].src = 'img/water.png';
+		tiles[Cells.FIREPLACE].src = 'img/fireplace.png';
 
 		for (var x = 0; x < this.config.LEVEL_WIDTH; x++){
 			for (var y = 0; y < this.config.LEVEL_HEIGHT; y++){

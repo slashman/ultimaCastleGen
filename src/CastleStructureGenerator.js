@@ -72,15 +72,24 @@ CastleStructureGenerator.prototype = {
 		var centralStructure = {};
 		if (Random.chance(50)){
 			centralStructure.type = 'courtyard';
-			if (Random.chance(50)){
-				centralStructure.centralFeature = 'fountain';
+			switch (Random.rand(0,2)){
+			case 0:
+				if (Random.chance(60))
+					centralStructure.centralFeature = 'fountain';
 				if (Random.chance(50)){
 					centralStructure.additionalFountains = true;
 					centralStructure.fountainSymmetry = Random.randomElementOf(['x', 'y', 'full']);
 				}
 				centralStructure.hasSmallLake = Random.chance(50);
-			} else {
+				break;
+			case 1:
 				centralStructure.centralFeature = 'well';
+				break;
+			case 2:
+				if (Random.chance(40))
+					centralStructure.centralFeature = 'fountain';
+				centralStructure.hasSmallLake = true;
+				break;
 			}
 			centralStructure.connectionWithRooms = {
 				type: Random.randomElementOf(['radial', 'around']),
@@ -92,7 +101,8 @@ CastleStructureGenerator.prototype = {
 			if (Random.chance(50)){
 				centralStructure.centralFeature = 'fountain';
 			}
-			centralStructure.hasFireplace = Random.chance(50);
+			centralStructure.centralFireplace = Random.chance(50);
+			centralStructure.cornerFireplaces = Random.chance(50);
 		}
 		centralStructure.width = 9 + Random.rand(0,3)*2;
 		var maxWidth = 15;

@@ -168,14 +168,17 @@ RoomBuilder.prototype = {
 		}
 		if (room.features.hasSmallLake  && room.height > 6 &&  room.width > 6){
 			this.map[midx-1][midy] = Cells.WATER;
-			this.map[midx-1][midy+1] = Cells.WATER;
-			this.map[midx-1][midy-1] = Cells.WATER;
 			this.map[midx][midy+1] = Cells.WATER;
 			this.map[midx][midy] = Cells.WATER;
 			this.map[midx][midy-1] = Cells.WATER;
 			this.map[midx+1][midy] = Cells.WATER;
-			this.map[midx+1][midy+1] = Cells.WATER;
-			this.map[midx+1][midy-1] = Cells.WATER;
+
+			if (Random.chance(60) && room.height > 7 && room.width > 7){
+				this.map[midx-1][midy+1] = Cells.WATER;
+				this.map[midx-1][midy-1] = Cells.WATER;
+				this.map[midx+1][midy+1] = Cells.WATER;
+				this.map[midx+1][midy-1] = Cells.WATER;
+			}
 		}
 		if (room.features.centralFeature === 'fountain'){
 			this.map[midx][midy] = Cells.FOUNTAIN;

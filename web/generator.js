@@ -70,9 +70,13 @@ CastleStructureGenerator.prototype = {
 		entranceStructure.hasCrossWindows = Random.chance(50);
 		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
 		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
+		entranceStructure.isMain = mainEntrance;
 		entranceStructure.width = this.castle.central.width - Random.rand(3, 6) * 2;
 		if (entranceStructure.width < 3)
 			entranceStructure.width = 3;
+		entranceStructure.openingWidth = Random.rand(1,entranceStructure.width-2);
+		if (entranceStructure.openingWidth % 2 == 0)
+			entranceStructure.openingWidth--;
 		return entranceStructure;
 	},
 	selectTowers: function(){
@@ -102,15 +106,24 @@ CastleStructureGenerator.prototype = {
 		var centralStructure = {};
 		if (Random.chance(50)){
 			centralStructure.type = 'courtyard';
-			if (Random.chance(50)){
-				centralStructure.centralFeature = 'fountain';
+			switch (Random.rand(0,2)){
+			case 0:
+				if (Random.chance(60))
+					centralStructure.centralFeature = 'fountain';
 				if (Random.chance(50)){
 					centralStructure.additionalFountains = true;
 					centralStructure.fountainSymmetry = Random.randomElementOf(['x', 'y', 'full']);
 				}
 				centralStructure.hasSmallLake = Random.chance(50);
-			} else {
+				break;
+			case 1:
 				centralStructure.centralFeature = 'well';
+				break;
+			case 2:
+				if (Random.chance(40))
+					centralStructure.centralFeature = 'fountain';
+				centralStructure.hasSmallLake = true;
+				break;
 			}
 			centralStructure.connectionWithRooms = {
 				type: Random.randomElementOf(['radial', 'around']),
@@ -122,7 +135,8 @@ CastleStructureGenerator.prototype = {
 			if (Random.chance(50)){
 				centralStructure.centralFeature = 'fountain';
 			}
-			centralStructure.hasFireplace = Random.chance(50);
+			centralStructure.centralFireplace = Random.chance(50);
+			centralStructure.cornerFireplaces = Random.chance(50);
 		}
 		centralStructure.width = 9 + Random.rand(0,3)*2;
 		var maxWidth = 15;
@@ -275,9 +289,17 @@ module.exports = CastleStructureGenerator;
 module.exports = {
 	WALL: 'wall',
 	FLOOR: 'floor',
+	FLOOR_2: 'floor2',
 	GRASS_1: 'grass1',
 	GRASS_2: 'grass2',
-	TREE: 'tree'
+	TREE: 'tree',
+	DOOR: 'door',
+	CROSS_WINDOW: 'crossWindow',
+	FOUNTAIN: 'fountain',
+	WATER: 'water',
+	WELL: 'well',
+	DIRT: 'dirt',
+	FIREPLACE: 'fireplace',
 };
 },{}],4:[function(require,module,exports){
 var CastleStructureGenerator = require('./CastleStructureGenerator');
@@ -328,8 +350,13 @@ function RoomBuilder(){};
 RoomBuilder.prototype = {
 	buildRooms: function(map, rooms){
 		this.map = map;
+		rooms = rooms.sort(function(a,b){var aLevel = a.level ? a.level : 0; var bLevel = b.level ? b.level : 0; return aLevel - bLevel;});
 		for (var i = 0; i < rooms.length; i++){
-			this.buildRoom(rooms[i]);
+			var buildFunction = this["build_"+rooms[i].type];
+			if (buildFunction){
+				buildFunction.call(this, rooms[i]);
+			} else 
+				this.buildRoom(rooms[i]);
 		}
 	},
 	buildRoom: function(room){
@@ -344,35 +371,197 @@ RoomBuilder.prototype = {
 		}
 	},
 	build_tower: function(room){
-		for (var x = room.x; x < room.x + room.widthidth; x++){
-			for (var y = room.y; y < room.y + room.heighteight; y++){
+		for (var x = room.x; x < room.x + room.width; x++){
+			for (var y = room.y; y < room.y + room.height; y++){
 				var wall = false;
 				if (x == room.x){
-					wall = room.widthalls.west;
+					wall = room.features.walls.west;
 				} else if (x == room.x + room.width - 1){
-					wall = room.widthalls.east;
+					wall = room.features.walls.east;
 				} else if (y == room.y){
-					wall = room.widthalls.north;
+					wall = room.features.walls.north;
 				} else if (y == room.y + room.height - 1){
-					wall = room.widthalls.south;
+					wall = room.features.walls.south;
 				}
 				if (wall){
 					if (wall === 'solid'){
 						this.map[x][y] = Cells.WALL;
 					} else if (wall === 'crossWindows'){
-						if (x === room.x + Math.floor((room.x+room.width)/2) ||
-							y === room.y + Math.floor((room.y+room.height)/2))
+						if (x === room.x + Math.floor(room.width/2)  ||
+							y === room.y + Math.floor(room.height/2) )
 							this.map[x][y] = Cells.CROSS_WINDOW;
 						else
 							this.map[x][y] = Cells.WALL;
 					} else if (wall === 'exit'){	
-						if (x === room.x + Math.floor((room.x+room.width)/2) ||
-							y === room.y + Math.floor((room.y+room.height)/2))
+						if (x === room.x + Math.floor(room.width/2) ||
+							y === room.y + Math.floor(room.height/2) )
 							this.map[x][y] = Cells.DOOR;
 						else
 							this.map[x][y] = Cells.WALL;
 					} else if (wall === 'open'){
 						this.map[x][y] = Cells.FLOOR;
+					}
+				} else {
+					this.map[x][y] = Cells.FLOOR;
+				}
+			}
+		}
+	},
+	build_mainHall: function(room){
+		for (var x = room.x; x < room.x + room.width; x++){
+			for (var y = room.y; y < room.y + room.height; y++){
+				if (x == room.x || x == room.x + room.width - 1 || y == room.y || y == room.y + room.height - 1){
+					this.map[x][y] = Cells.WALL;
+				} else {
+					if (room.features.hasSpecialFloor)
+						this.map[x][y] = Cells.FLOOR_2;
+					else
+						this.map[x][y] = Cells.FLOOR;
+				}
+			}
+		}
+		var midx = room.x+Math.floor(room.width/2);
+		var midy = room.y+Math.floor(room.height/2);
+		if (room.features.centralFireplace){
+			if (room.features.centralFeature){
+				if (room.width > 6 && room.height > 6){
+					this.map[midx - 1][midy - 1] = Cells.FIREPLACE;
+					this.map[midx + 1][midy - 1] = Cells.FIREPLACE;
+					this.map[midx - 1][midy + 1] = Cells.FIREPLACE;
+					this.map[midx + 1][midy + 1] = Cells.FIREPLACE;
+				}
+			} else {
+				this.map[midx][midy] = Cells.FIREPLACE;
+			}
+		}
+		if (room.features.cornerFireplaces && (room.height > 5 || room.width > 5)){
+			if (!room.features.centralFireplace || (room.height > 7 || room.width > 7)){
+				this.map[room.x+1][room.y+1] = Cells.FIREPLACE;
+				this.map[room.x+1][room.y+room.height-2] = Cells.FIREPLACE;
+				this.map[room.x+room.width-2][room.y+1] = Cells.FIREPLACE;
+				this.map[room.x+room.width-2][room.y+room.height-2] = Cells.FIREPLACE;
+			}
+		}
+		if (room.features.centralFeature === 'fountain'){
+			this.map[midx][midy] = Cells.FOUNTAIN;
+		}
+		//TODO: Implement room.features.shape === 'circle'
+		//TODO: Implement room.features.shape === 'cross'
+	},
+	build_courtyard: function(room){
+		/*
+			centralFeature: 'fountain', // 'fountain' / 'well'
+			additionalFountains: true, // only for 'fountain'
+			fountainSymmetry: 'x', // Only for 'fountain' with additionalFountains ['x', 'y', 'full'];
+			hasSmallLake: false // only for 'fountain'
+			connectionWithRooms: {
+				type: 'radial' // ['radial', 'around'],
+				terrain: 'floor'  // ['floor', 'dirt'])
+			},
+		*/
+		for (var x = room.x; x < room.x + room.width; x++){
+			for (var y = room.y; y < room.y + room.height; y++){
+				if (x == room.x || x == room.x + room.width - 1 || y == room.y || y == room.y + room.height - 1){
+					this.map[x][y] = Cells.WALL;
+				} else {
+					if (Random.chance(80))
+						this.map[x][y] = Cells.GRASS_1;
+					else if (Random.chance(80))
+						this.map[x][y] = Cells.GRASS_2;
+					else
+						this.map[x][y] = Cells.TREE;
+				}
+			}
+		}
+		var midx = room.x+Math.floor(room.width/2);
+		var midy = room.y+Math.floor(room.height/2);
+		var connectionTerrain = room.features.connectionWithRooms.terrain;
+		if (room.features.connectionWithRooms.type === 'radial'){
+			if (room.width > 6) for (var x = room.x + 1; x < room.x + room.width - 1; x++){
+				this.map[x][midy-1] = connectionTerrain;
+				this.map[x][midy] = connectionTerrain;
+				this.map[x][midy+1] = connectionTerrain;
+			}
+			if (room.height > 6) for (var y = room.y + 1; y < room.y + room.height - 1; y++){
+				this.map[midx-1][y] = connectionTerrain;
+				this.map[midx][y] = connectionTerrain;
+				this.map[midx+1][y] = connectionTerrain;
+			}
+			if (room.width > 7 && room.width > 7) {
+				this.map[midx - 2][midy - 2] = connectionTerrain;
+				this.map[midx - 2][midy + 2] = connectionTerrain;
+				this.map[midx + 2][midy - 2] = connectionTerrain;
+				this.map[midx + 2][midy + 2] = connectionTerrain;
+			}
+		} else if (room.features.connectionWithRooms.type === 'around'){
+			for (var x = room.x + 1; x < room.x + room.width - 1; x++){
+				this.map[x][room.y+1] = connectionTerrain;
+				this.map[x][room.y+room.height - 2] = connectionTerrain;
+			}
+			for (var y = room.y + 1; y < room.y + room.height - 1; y++){
+				this.map[room.x+1][y] = connectionTerrain;
+				this.map[room.x+room.width - 2][y] = connectionTerrain;
+			}
+			if (room.width > 7 && room.height > 7){
+				this.map[room.x+2][room.y+2] = connectionTerrain;
+				this.map[room.x+2][room.y+room.height-3] = connectionTerrain;
+				this.map[room.x+room.width-3][room.y+2] = connectionTerrain;
+				this.map[room.x+room.width-3][room.y+room.height-3] = connectionTerrain;
+			}
+		}
+		if (room.features.hasSmallLake  && room.height > 6 &&  room.width > 6){
+			this.map[midx-1][midy] = Cells.WATER;
+			this.map[midx-1][midy+1] = Cells.WATER;
+			this.map[midx-1][midy-1] = Cells.WATER;
+			this.map[midx][midy+1] = Cells.WATER;
+			this.map[midx][midy] = Cells.WATER;
+			this.map[midx][midy-1] = Cells.WATER;
+			this.map[midx+1][midy] = Cells.WATER;
+			this.map[midx+1][midy+1] = Cells.WATER;
+			this.map[midx+1][midy-1] = Cells.WATER;
+		}
+		if (room.features.centralFeature === 'fountain'){
+			this.map[midx][midy] = Cells.FOUNTAIN;
+		} else if (room.features.centralFeature === 'well'){
+			this.map[midx][midy] = Cells.WELL;
+		}
+		if (room.features.additionalFountains){
+			if (room.features.fountainSymmetry === 'x' && room.height > 9){
+				this.map[midx][midy + 2] = Cells.FOUNTAIN;
+				this.map[midx][midy - 2] = Cells.FOUNTAIN;
+			} else if (room.features.fountainSymmetry === 'y' && room.width > 9){
+				this.map[midx - 2][midy] = Cells.FOUNTAIN;
+				this.map[midx + 2][midy] = Cells.FOUNTAIN;
+			} else if (room.features.fountainSymmetry === 'full' && room.width > 9  && room.height > 9){
+				this.map[midx - 2][midy - 2] = Cells.FOUNTAIN;
+				this.map[midx + 2][midy - 2] = Cells.FOUNTAIN;
+				this.map[midx - 2][midy + 2] = Cells.FOUNTAIN;
+				this.map[midx + 2][midy + 2] = Cells.FOUNTAIN;
+			}
+		}
+	},
+	build_entrance: function(room){
+		/*
+		entranceStructure.hasFloor = Random.chance(50);
+		entranceStructure.hasCrossWindows = Random.chance(50);
+		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
+		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
+		entranceStructure.isMain = mainEntrance;
+		entranceStructure.width = this.castle.central.width - Random.rand(3, 6) * 2;
+		if (entranceStructure.width < 3)
+			entranceStructure.width = 3;
+		*/
+		var halfOpening = Math.floor((room.width - room.features.openingWidth) / 2);
+		console.log("halfOpening", halfOpening);
+		for (var x = room.x; x < room.x + room.width; x++){
+			for (var y = room.y; y < room.y + room.height; y++){
+				if (x == room.x || x == room.x + room.width - 1){
+					this.map[x][y] = Cells.WALL;
+				} else if ((room.features.isMain && y == room.y) || (!room.features.isMain && y == room.y + room.height - 1) ){
+					if (x >= room.x+halfOpening && x <= room.x + room.width - halfOpening-1){
+						this.map[x][y] = Cells.FLOOR;
+					} else {
+						this.map[x][y] = Cells.WALL;
 					}
 				} else {
 					this.map[x][y] = Cells.FLOOR;
@@ -394,6 +583,7 @@ RoomsGenerator.prototype = {
 		this.structure = structure;
 		this.generationParams = generationParams;
 		this.rooms = [];
+		this.placeFoundations();
 		this.placeTowers();
 		this.placeCentralFeature();
 		this.placeEntrances();
@@ -410,9 +600,35 @@ RoomsGenerator.prototype = {
 			}
 			break;
 		}
-		
 		return this.rooms;
 	},
+	placeFoundations: function(){
+		var def = this.structure.towers;
+		var connectionWidth = def.connectionCorridors.type === 'corridor' ? 3 : def.connectionCorridors.hallWidth;
+		var x = 3;
+		if (def.verticalConnections){
+			x = 1 + Math.floor(def.size / 2) + Math.floor(connectionWidth/2) - 1;
+		}
+		var y = 3;
+		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'top'){
+			y = 1 + Math.floor(def.size / 2) + Math.floor(connectionWidth/2);
+		}
+		var yEnd = this.generationParams.height - 5;
+		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom'){
+			yEnd = this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2);
+		}
+		this.addRoom(
+			x,
+			y,
+			'rooms',
+			'',
+			this.generationParams.width -  2 * x - 1,
+			yEnd - y + 1,
+			{},
+			-1
+		);
+	},
+
 	placeTowers: function(){
 		var def = this.structure.towers;
 		/*
@@ -443,7 +659,7 @@ RoomsGenerator.prototype = {
 				south: def.verticalConnections ? 'exit' : 'solid',
 				east: def.horizontalConnections === 'both' || def.horizontalConnections === 'top' ? 'exit' : 'solid'
 			}
-		});
+		}, 1);
 		//NE
 		this.addRoom(this.generationParams.width - def.size - 2, 1,'tower', 'Northeast Tower', def.size, def.size, {
 			shape: def.circle ? 'circle' : 'square',
@@ -453,7 +669,7 @@ RoomsGenerator.prototype = {
 				south: def.verticalConnections ? 'exit' : 'solid',
 				west: def.horizontalConnections === 'both' || def.horizontalConnections === 'top' ? 'exit' : 'solid'
 			}
-		});
+		}, 1);
 		//SW
 		this.addRoom(1, this.generationParams.height - def.size - 2,'tower', 'Southwest Tower', def.size, def.size, {
 			shape: def.circle ? 'circle' : 'square',
@@ -463,7 +679,7 @@ RoomsGenerator.prototype = {
 				north: def.verticalConnections ? 'exit' : 'solid',
 				east: def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom' ? 'exit' : 'solid'
 			}
-		});
+		}, 1);
 		//SE
 		this.addRoom(this.generationParams.width - def.size - 2, this.generationParams.height - def.size - 2,'tower', 'Southeast Tower', def.size, def.size, {
 			shape: def.circle ? 'circle' : 'square',
@@ -473,7 +689,7 @@ RoomsGenerator.prototype = {
 				north: def.verticalConnections ? 'exit' : 'solid',
 				west: def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom' ? 'exit' : 'solid'
 			}
-		});
+		}, 1);
 		var connectionWidth = def.connectionCorridors.type === 'corridor' ? 3 : def.connectionCorridors.hallWidth;
 		if (def.verticalConnections){
 			// West corridor
@@ -568,7 +784,8 @@ RoomsGenerator.prototype = {
 				'North Entrance',
 				def.width,
 				entranceLength + 1,
-				def
+				def,
+				1
 			);
 		}
 		// South Entrance
@@ -581,7 +798,8 @@ RoomsGenerator.prototype = {
 				'South Entrance',
 				def.width,
 				entranceLength,
-				def
+				def,
+				1
 			);
 		}
 
@@ -661,7 +879,7 @@ RoomsGenerator.prototype = {
 					h: room.h
 				});
 			}
-			area.w = this.generationParams.width - 2 * x;
+			area.w = this.generationParams.width - 2 * x - 1;
 		}
 
 		while(true){
@@ -932,7 +1150,7 @@ RoomsGenerator.prototype = {
 		}
 		return true;
 	},
-	addRoom: function(x, y, type, name, width, height, features){
+	addRoom: function(x, y, type, name, width, height, features, level){
 		this.rooms.push({
 			x: x,
 			y: y,
@@ -940,7 +1158,8 @@ RoomsGenerator.prototype = {
 			name: name,
 			width: width,
 			height: height,
-			features: features
+			features: features,
+			level: level
 		});
 	}
 }
@@ -1024,80 +1243,7 @@ CanvasRenderer.prototype = {
 		}
 	},
 	drawLevel: function(level, canvas){
-		var canvas = document.getElementById(canvas);
-		var context = canvas.getContext('2d');
-		context.font="12px Georgia";
-		context.clearRect(0, 0, canvas.width, canvas.height);
-		var zoom = 8;
-		var cells = level.cells;
-		for (var x = 0; x < this.config.LEVEL_WIDTH; x++){
-			for (var y = 0; y < this.config.LEVEL_HEIGHT; y++){
-				var color = '#FFFFFF';
-				var cell = cells[x][y];
-				if (cell === 'water'){
-					color = '#0000FF';
-				} else if (cell === 'lava'){
-					color = '#FF0000';
-				} else if (cell === 'fakeWater'){
-					color = '#0000FF';
-				}else if (cell === 'solidRock'){
-					color = '#594B2D';
-				}else if (cell === 'darkRock'){
-					color = '#332b1a';
-				}else if (cell === 'grayRock'){
-					color = '#595959';
-				}else if (cell === 'cavernFloor'){
-					color = '#876418';
-				}else if (cell === 'downstairs'){
-					color = '#FF0000';
-				}else if (cell === 'upstairs'){
-					color = '#00FF00';
-				}else if (cell === 'stoneWall'){
-					color = '#BBBBBB';
-				}else if (cell === 'stoneFloor'){
-					color = '#666666';
-				}else if (cell === 'corridor'){
-					color = '#FF0000';
-				}else if (cell === 'padding'){
-					color = '#00FF00';
-				}else if (cell === 'bridge'){
-					color = '#946800';
-				}
-				context.fillStyle = color;
-				context.fillRect(x * zoom, y * zoom, zoom, zoom);
-			}
-		}
-		for (var i = 0; i < level.enemies.length; i++){
-			var enemy = level.enemies[i];
-			var color = '#FFFFFF';
-			switch (enemy.code){
-			case 'bat':
-				color = '#EEEEEE';
-				break;
-			case 'lavaLizard':
-				color = '#00FF88';
-				break;
-			case 'daemon':
-				color = '#FF8800';
-				break;
-			}
-			context.fillStyle = color;
-			context.fillRect(enemy.x * zoom, enemy.y * zoom, zoom, zoom);
-		}
-		for (var i = 0; i < level.items.length; i++){
-			var item = level.items[i];
-			var color = '#FFFFFF';
-			switch (item.code){
-			case 'dagger':
-				color = '#EEEEEE';
-				break;
-			case 'leatherArmor':
-				color = '#00FF88';
-				break;
-			}
-			context.fillStyle = color;
-			context.fillRect(item.x * zoom, item.y * zoom, zoom, zoom);
-		}
+		
 	},
 	drawLevelWithIcons: function(cells, canvas){
 		var canvas = document.getElementById(canvas);
@@ -1107,19 +1253,37 @@ CanvasRenderer.prototype = {
 		var zoom = 8;
 		var tiles = {};
 		tiles[Cells.FLOOR] = new Image();
+		tiles[Cells.FLOOR_2] = new Image();
 		tiles[Cells.WALL] = new Image();
 		tiles[Cells.GRASS_1] = new Image();
 		tiles[Cells.GRASS_2] = new Image();
+		tiles[Cells.DOOR] = new Image();
 		tiles[Cells.TREE] = new Image();
+		tiles[Cells.CROSS_WINDOW] = new Image();
+		tiles[Cells.FOUNTAIN] = new Image();
+		tiles[Cells.WELL] = new Image();
+		tiles[Cells.DIRT] = new Image();
+		tiles[Cells.WATER] = new Image();
+		tiles[Cells.FIREPLACE] = new Image();
 		tiles[Cells.FLOOR].src = 'img/floor.png';
+		tiles[Cells.FLOOR_2].src = 'img/floor2.png';
 		tiles[Cells.WALL].src = 'img/wall.png';
 		tiles[Cells.GRASS_1].src = 'img/grass1.png';
 		tiles[Cells.GRASS_2].src = 'img/grass2.png';
+		tiles[Cells.DOOR].src = 'img/door.png';
 		tiles[Cells.TREE].src = 'img/tree.png';
+		tiles[Cells.CROSS_WINDOW].src = 'img/crossWindow.png';
+		tiles[Cells.FOUNTAIN].src = 'img/fountain.png';
+		tiles[Cells.WELL].src = 'img/well.png';
+		tiles[Cells.DIRT].src = 'img/dirt.png';
+		tiles[Cells.WATER].src = 'img/water.png';
+		tiles[Cells.FIREPLACE].src = 'img/fireplace.png';
+
 		for (var x = 0; x < this.config.LEVEL_WIDTH; x++){
 			for (var y = 0; y < this.config.LEVEL_HEIGHT; y++){
 				var cell = cells[x][y]; 
-				context.drawImage(tiles[cell], x * 16, y * 16);
+				if (cell)
+					context.drawImage(tiles[cell], x * 16, y * 16);
 			}
 		}
 	}

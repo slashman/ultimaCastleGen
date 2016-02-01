@@ -9,13 +9,14 @@ function generateMap(){
 
 	var castle = generator.generateMap({royal: true, width: 32, height: 32})
 	document.getElementById("mapOutput").innerHTML = '<pre>'+JSON.stringify(castle, null, 2)+'</pre>';
-	//canvasRenderer.drawSketch(castle.rooms, 'levelCanvas', false);
+	canvasRenderer.drawSketch(castle.rooms, 'planCanvas', false);
 	canvasRenderer.drawLevelWithIcons(castle.map, 'levelCanvas');
 	
 }
 </script>
 </head>
 <button onclick="generateMap()">Generate</button>
+<canvas id="planCanvas" width="512" height="512"></canvas>
 <canvas id="levelCanvas" width="512" height="512"></canvas>
 <div id = "mapOutput"></div>
 </html>

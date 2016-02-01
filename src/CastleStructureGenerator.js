@@ -47,6 +47,9 @@ CastleStructureGenerator.prototype = {
 		entranceStructure.openingWidth = Random.rand(1,entranceStructure.width-2);
 		if (entranceStructure.openingWidth % 2 == 0)
 			entranceStructure.openingWidth--;
+		entranceStructure.closingWidth = Random.rand(1,entranceStructure.width-2);
+		if (entranceStructure.closingWidth % 2 == 0)
+			entranceStructure.closingWidth--;
 		return entranceStructure;
 	},
 	selectTowers: function(){

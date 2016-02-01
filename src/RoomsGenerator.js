@@ -8,6 +8,7 @@ RoomsGenerator.prototype = {
 		this.structure = structure;
 		this.generationParams = generationParams;
 		this.rooms = [];
+		this.anchorPoints = {};
 		this.placeFoundations();
 		this.placeTowers();
 		this.placeCentralFeature();
@@ -138,25 +139,31 @@ RoomsGenerator.prototype = {
 		}
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'top'){
 			// North corridor
+			this.anchorPoints.northBound = 1 + Math.floor(def.size / 2) - Math.floor(connectionWidth/2);
 			this.addRoom(
 				1 + def.size - 1, 
-				1 + Math.floor(def.size / 2) - Math.floor(connectionWidth/2), 
+				this.anchorPoints.northBound, 
 				def.connectionCorridors.type, 'North '+def.connectionCorridors.type, 
 				this.generationParams.width - 2 * def.size - 1,
 				connectionWidth, 
 				def.hallDecoration
 			);
+		} else {
+			this.anchorPoints.northBound = 3;
 		}
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom'){
+			this.anchorPoints.southBound = this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2)+ ((def.size - connectionWidth)%2 != 0 ? 1 : 0) + connectionWidth;
 			// South corridor
 			this.addRoom(
 				1 + def.size - 1, 
-				this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2)+ ((def.size - connectionWidth)%2 != 0 ? 1 : 0), 
+				this.anchorPoints.southBound - connectionWidth,
 				def.connectionCorridors.type, 'South '+def.connectionCorridors.type, 
 				this.generationParams.width - 2 * def.size - 1,
 				connectionWidth, 
 				def.hallDecoration
 			);
+		} else {
+			this.anchorPoints.southBound = this.generationParams.height - 4;
 		}
 	},
 	placeCentralFeature: function(){
@@ -199,16 +206,30 @@ RoomsGenerator.prototype = {
 	},
 	placeEntrances: function(){
 		var entranceLength = Math.floor(this.generationParams.height / 2) - Math.floor(this.structure.central.height /2) - 1;
+
 		// North entrance
 		if (this.structure.entrances.northExit){
 			var def = this.structure.entrances.northExit;
+			// Northern Exit
 			this.addRoom(
 				Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
 				0,
 				'entrance',
-				'North Entrance',
+				'Entrance',
 				def.width,
-				entranceLength + 1,
+				this.anchorPoints.northBound,
+				def,
+				1
+			);
+
+			// Northern entrance hall
+			this.addRoom(
+				Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
+				this.anchorPoints.northBound,
+				'entranceHall',
+				'Entrance Hall',
+				def.width,
+				entranceLength - this.anchorPoints.northBound + 1,
 				def,
 				1
 			);
@@ -219,10 +240,20 @@ RoomsGenerator.prototype = {
 			this.addRoom(
 				Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
 				entranceLength + this.structure.central.height - 1,
-				'entrance',
-				'South Entrance',
+				'entranceHall',
+				'Entrance Hall',
 				def.width,
-				entranceLength,
+				this.anchorPoints.southBound - (entranceLength + this.structure.central.height - 1),
+				def,
+				1
+			);
+			this.addRoom(
+				Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
+				this.anchorPoints.southBound,
+				'entrance',
+				'Entrance',
+				def.width,
+				this.generationParams.height - this.anchorPoints.southBound,
 				def,
 				1
 			);

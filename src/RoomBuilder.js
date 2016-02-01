@@ -200,7 +200,7 @@ RoomBuilder.prototype = {
 			}
 		}
 	},
-	build_entrance: function(room){
+	build_entranceHall: function(room){
 		/*
 		entranceStructure.hasFloor = Random.chance(50);
 		entranceStructure.hasCrossWindows = Random.chance(50);
@@ -212,7 +212,7 @@ RoomBuilder.prototype = {
 			entranceStructure.width = 3;
 		*/
 		var halfOpening = Math.floor((room.width - room.features.openingWidth) / 2);
-		console.log("halfOpening", halfOpening);
+		var halfClosing = Math.floor((room.width - room.features.closingWidth) / 2);
 		for (var x = room.x; x < room.x + room.width; x++){
 			for (var y = room.y; y < room.y + room.height; y++){
 				if (x == room.x || x == room.x + room.width - 1){
@@ -223,9 +223,32 @@ RoomBuilder.prototype = {
 					} else {
 						this.map[x][y] = Cells.WALL;
 					}
+				} else if ((!room.features.isMain && y == room.y) || (room.features.isMain && y == room.y + room.height - 1) ){
+					if (x >= room.x+halfClosing && x <= room.x + room.width - halfClosing-1){
+						this.map[x][y] = Cells.FLOOR;
+					} else {
+						this.map[x][y] = Cells.WALL;
+					}
 				} else {
 					this.map[x][y] = Cells.FLOOR;
 				}
+			}
+		}
+	},
+	build_entrance: function(room){
+		/*
+		entranceStructure.hasFloor = Random.chance(50);
+		entranceStructure.hasCrossWindows = Random.chance(50);
+		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
+		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
+		entranceStructure.isMain = mainEntrance;
+		entranceStructure.width = this.castle.central.width - Random.rand(3, 6) * 2;
+		if (entranceStructure.width < 3)
+			entranceStructure.width = 3;
+		*/
+		for (var x = room.x; x < room.x + room.width; x++){
+			for (var y = room.y; y < room.y + room.height; y++){
+				this.map[x][y] = Cells.FLOOR;
 			}
 		}
 	}

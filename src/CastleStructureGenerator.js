@@ -204,6 +204,7 @@ CastleStructureGenerator.prototype = {
 				room.placeNorth = true;
 				room.southRoom = 'throneHall';
 				room.isBig = true;
+				room.level = 2;
 				break;
 			case 'lordQuarters':
 				room.piano = Random.chance(50);

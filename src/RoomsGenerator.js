@@ -457,14 +457,14 @@ RoomsGenerator.prototype = {
 			Arrays.removeObject(bigAvailableRooms, room); 
 			Arrays.removeObject(otherAvailableRooms, room);
 			if (room){
-				addedRooms.push({x: room.x, y: room.y, name: requiredRoom.type, type: requiredRoom.type, w: room.w, h: room.h});	
+				addedRooms.push({x: room.x, y: room.y, name: requiredRoom.type, type: requiredRoom.type, w: room.w, h: room.h, level: requiredRoom.level});
 				// Place south rooms
 				if (requiredRoom.southRoom){
 					var southRoom = this.getRoomAt(rooms, room.x + Math.floor(room.w/2), room.y + room.h+2);
 					if (!southRoom){
 						// There's probably a hall, or the central feature which is fine.
 					} else {
-						addedRooms.push({x: southRoom.x, y: southRoom.y, name: requiredRoom.southRoom, type: requiredRoom.southRoom, w: southRoom.w, h: southRoom.h});
+						addedRooms.push({x: southRoom.x, y: southRoom.y, name: requiredRoom.southRoom, type: requiredRoom.southRoom, w: southRoom.w, h: southRoom.h, level: requiredRoom.level});
 						Arrays.removeObject(bigAvailableRooms, southRoom); // Available space used
 						Arrays.removeObject(otherAvailableRooms, southRoom); // Available space used
 					}
@@ -478,14 +478,14 @@ RoomsGenerator.prototype = {
 		var remainingRooms = northBigAvailableRooms.concat(northAvailableRooms).concat(bigAvailableRooms).concat(otherAvailableRooms);
 		for (var i = 0; i < remainingRooms.length; i++){
 			var availableRoom = remainingRooms[i];
-			addedRooms.push({x: availableRoom.x, y: availableRoom.y, name: 'hall*', type: 'hall*', w: availableRoom.w, h: availableRoom.h});
+			addedRooms.push({x: availableRoom.x, y: availableRoom.y, name: 'hall*', type: 'hall*', w: availableRoom.w, h: availableRoom.h, level: 0});
 		}
 			
 		// Officially add the rooms
 		// TODO: Not needed anymore
 		for (var i = 0; i < addedRooms.length; i++){
 			var room = addedRooms[i];
-			this.addRoom(room.x, room.y, room.type, room.type, room.w, room.h);
+			this.addRoom(room.x, room.y, room.type, room.type, room.w, room.h, {}, room.level);
 		}
 		return true;
 	},

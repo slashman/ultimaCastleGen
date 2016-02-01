@@ -252,7 +252,7 @@ RoomsGenerator.prototype = {
 			h: yEnd - y + 1
 		};
 		// Brute force! Let's try a lot of times to fit the rooms in the space we have!
-		var roomsToPlace = Math.floor(this.structure.rooms.length / 2);
+		var roomsToPlace = Math.ceil(this.structure.rooms.length / 2) + 1;
 		this.roomsArea = area;
 		var minHeight = 5;
 		var maxHeight = 7;
@@ -470,7 +470,7 @@ RoomsGenerator.prototype = {
 					}
 				}
 			} else {
-				console.log("No room for "+requiredRoom.type)
+				return false; // Give me better rooms!
 			}
 		}
 

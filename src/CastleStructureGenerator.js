@@ -239,14 +239,12 @@ CastleStructureGenerator.prototype = {
 			room.type = 'throneRoom';
 		} else if (!this.currentRooms.lordQuarters){
 			room.type = 'lordQuarters';
-		} else if (!this.currentRooms.livingQuarters){
-			room.type = 'livingQuarters';
 		} else if (!this.currentRooms.diningRoom){
 			room.type = 'diningRoom';
 		} else if (!this.currentRooms.kitchen){
 			room.type = 'kitchen';
 		} else {
-			var possibleRooms = ['livingQuarters', 'diningRoom', 'kitchen', 'prison', 'dungeon', 'hall', 'guestRoom', 'library'];
+			var possibleRooms = ['livingQuarters', 'diningRoom', 'kitchen', /*'prison', 'dungeon',*/ 'hall', 'guestRoom', 'library'];
 			if (!this.currentRooms.forge){
 				possibleRooms.push('forge');
 			}

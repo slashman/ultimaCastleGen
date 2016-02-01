@@ -16,12 +16,16 @@ RoomsGenerator.prototype = {
 		var retries = 0;
 		while(true){
 			var emptyRooms = this.placeRooms();
+			if (emptyRooms == false){
+				return false;
+			}
 			var assigned = this.assignRooms(emptyRooms);
 			if (!assigned){
 				if (retries++ < 50){
 					continue;
 				} else {
-					this.assignRooms(emptyRooms, true);
+					return false;
+					//this.assignRooms(emptyRooms, true);
 				}
 			}
 			break;
@@ -57,25 +61,6 @@ RoomsGenerator.prototype = {
 
 	placeTowers: function(){
 		var def = this.structure.towers;
-		/*
-			{
-				size: 5, // 5, 7 or 9
-				crossWindows: true, // Defines if the walls have cross windows to the outside
-				circle: true, // Defines if the shape of the room is a circle
-				verticalConnections: false, // Defines if NW-SW and NE-SE towers are connected
-				horizontalConnections: 'both', // If 'both', NW-NE and SW-SE are connected, if 'top' only NW and NE are connected, if 'bottom' only SW and SW towers are connected
-				connectionCorridors: {
-					type: 'corridor' // If 'corridor', towers are linked by thin 1 space corridors. If 'halls' then they are connected by wide decorated halls.
-					hallDecoration: { // Only for halls
-						torches: true,
-						plants: false,
-						columns: false,
-						fountains: true
-					}
-					hallWidth: 4 // 3, 4 or 5
-				}
-			}
-		*/
 		//NW
 		this.addRoom(1, 1,'tower', 'Northwest Tower', def.size, def.size, {
 			shape: def.circle ? 'circle' : 'square',
@@ -167,32 +152,6 @@ RoomsGenerator.prototype = {
 		}
 	},
 	placeCentralFeature: function(){
-		/*
-		{
-			type: 'courtyard',
-			centralFeature: 'fountain', // 'fountain' / 'well'
-			additionalFountains: true, // only for 'fountain'
-			fountainSymmetry: 'x', // Only for 'fountain' with additionalFountains ['x', 'y', 'full'];
-			hasSmallLake: false // only for 'fountain'
-			connectionWithRooms: {
-				type: 'radial' // ['radial', 'around'],
-				terrain: 'floor'  // ['floor', 'dirt'])
-			},
-			width: 11, // 9, 11, 13, 15
-			height: 11, // 9, 11, 13, 15
-			shape: 'square' // ['square', 'circle', 'cross']
-		}
-
-		{
-			type: 'mainHall',
-			centralFeature: 'fountain', // 'fountain' / undefined
-			hasSpecialFloor: true, 
-			hasFireplace: true,
-			width: 11, // 9, 11, 13, 15
-			height: 11, // 9, 11, 13, 15
-			shape: 'square' // ['square', 'circle', 'cross']
-		}
-		*/
 		var def = this.structure.central;
 		this.addRoom(
 			Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
@@ -293,15 +252,17 @@ RoomsGenerator.prototype = {
 			h: yEnd - y + 1
 		};
 		// Brute force! Let's try a lot of times to fit the rooms in the space we have!
-		var roomsToPlace = Math.ceil(this.structure.rooms.length / 2);
+		var roomsToPlace = Math.floor(this.structure.rooms.length / 2);
 		this.roomsArea = area;
-		var minHeight = 3;
-		var maxHeight = 5;
-		var minWidth = 3;
-		var maxWidth = 5;
+		var minHeight = 5;
+		var maxHeight = 7;
+		var minWidth = 5;
+		var maxWidth = 7;
 		var addedRooms = [];
-		for (var i = 0; i < 100; i++){
-			for (var j = 0; j < 1000; j++){
+		var placedRooms = 0;
+		var reduceRoomsToPlace = 100;
+		out: for (var i = 0; i < 500; i++){
+			for (var j = 0; j < 500; j++){
 				var room = {
 					x: Random.rand(area.x, area.x + area.w - 2 - minWidth),
 					y: Random.rand(area.y, area.y + area.h - 2 - minHeight),
@@ -310,16 +271,22 @@ RoomsGenerator.prototype = {
 				};
 				if (this.validRoom(room, addedRooms)){
 					addedRooms.push(room);
-					roomsToPlace--;
-					if (roomsToPlace == 0)
-						break;
+					placedRooms++;
+					if (placedRooms == roomsToPlace)
+						break out;
 				}
 			}
-			if (roomsToPlace == 0)
-				break;
-			roomsToPlace = Math.ceil(this.structure.rooms.length / 2);
+			if (reduceRoomsToPlace == 0){
+				if (roomsToPlace > 4)
+					roomsToPlace--;
+				reduceRoomsToPlace = 100;
+			} else {
+				reduceRoomsToPlace --; 
+			}
 			addedRooms = [];
 		}
+		if (placedRooms != roomsToPlace)
+			return false; // Couldn't place enough rooms, sucks!
 		
 		// Is the castle super symmetric? if not, we mirror the rooms before making them grow, and extend the play area
 		if (!this.structure.general.superSymmetric){

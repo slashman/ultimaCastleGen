@@ -14,9 +14,15 @@ MapGenerator.prototype = {
 		this.roomsGenerator = new RoomsGenerator();
 		this.terrainGenerator = new TerrainGenerator();
 		this.roomBuilder = new RoomBuilder();
+		
 		var castle = {};
-		castle.structure = this.castleStructureGenerator.generateMap(generationParams);
-		castle.rooms = this.roomsGenerator.generateMap(castle.structure, generationParams);
+		while (true){
+			castle.structure = this.castleStructureGenerator.generateMap(generationParams);
+			castle.rooms = this.roomsGenerator.generateMap(castle.structure, generationParams);
+			if (castle.rooms != false)
+				break;
+		}
+
 		castle.map = this.terrainGenerator.generateTerrain(generationParams);
 		this.roomBuilder.buildRooms(castle.map, castle.rooms);
 		return castle;

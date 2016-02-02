@@ -317,6 +317,9 @@ RoomBuilder.prototype = {
 		this.buildRoom(room);
 		var leftSize = room.width >= 6 ? 3 : 2;
 		var rightSize = room.width >= 8 ? room.width > 8 ? 3 : 2 : 0;
+		var topSize = room.height >= 6 ? 3 : 2;
+		var bottomSize = room.height >= 8 ? room.height > 8 ? 3 : 2 : 0;
+
 		if (Random.chance(50)){
 			// Flip sides
 			var temp = rightSize;
@@ -337,6 +340,19 @@ RoomBuilder.prototype = {
 					this.placeBlock(mainBlock, room.x+room.width-rightSize-1, y, rightSize, true, quartersType);
 			}
 		}
+		for (var x = room.x+1; x < room.x + room.width - 1; x++){
+			if (topSize){
+				var mainBlock = this.selectLivingQuartersVBlock(room, quartersType);
+				if (mainBlock) 
+					this.placeVBlock(mainBlock, x, room.y+1, topSize, false, quartersType);
+			}
+			if (bottomSize){
+				var mainBlock = this.selectLivingQuartersVBlock(room, quartersType);
+				if (mainBlock) 
+					this.placeVBlock(mainBlock, x, room.y+room.height-bottomSize-1, bottomSize, true, quartersType);
+			}
+		}
+
 		if (quartersType != 'simple'){
 			// Place bed(s) for royal and guest quarters
 			var numberOfBeds = quartersType === 'guestRoom' ? 2 : 1;
@@ -360,7 +376,7 @@ RoomBuilder.prototype = {
 		if (Random.chance(20)){
 			return false;
 		}
-		// Table with chair?
+		// Table with chair
 		if (!room.placedElements["tableAndChair"] && quartersType != 'simple' && Random.chance(40)){
 			room.placedElements["tableAndChair"] = true;
 			return 'tableAndChair'
@@ -379,14 +395,67 @@ RoomBuilder.prototype = {
 				additionalElements = [Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
 				if (!room.placedElements[Cells.MIRROR])
 					additionalElements.push(Cells.MIRROR);
-				if (!room.placedElements[Cells.PIANO])
-					additionalElements.push(Cells.PIANO);
 				break;
 
 		}
 		var element = Random.randomElementOf(additionalElements);
 		room.placedElements[element] = true;
 		return element;
+	},
+	selectLivingQuartersVBlock: function(room, quartersType){
+		if (!room.placedElements["tableAndPiano"] && quartersType === 'lord' && Random.chance(40)){
+			room.placedElements["tableAndPiano"] = true;
+			return 'tableAndPiano'
+		}
+		if (Random.chance(60)){
+			return false;
+		}
+		var additionalElements = false;
+		switch (quartersType){
+			case 'simple':
+				additionalElements = [Cells.BARREL, Cells.LOCKER, Cells.PLANT, Cells.SMALL_TABLE];
+				break;
+			case 'guestRoom':
+				additionalElements = [Cells.BARREL, Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
+				if (!room.placedElements[Cells.MIRROR])
+					additionalElements.push(Cells.MIRROR);
+				break;
+			case 'lord':
+				additionalElements = [Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
+				if (!room.placedElements[Cells.MIRROR])
+					additionalElements.push(Cells.MIRROR);
+				break;
+
+		}
+		var element = Random.randomElementOf(additionalElements);
+		room.placedElements[element] = true;
+		return element;
+	},
+	placeVBlock: function(type, x,y,size, flip, quartersType){
+		switch (type){
+		case 'tableAndChair':
+			if (!flip){
+				this.map[x][y] = Cells.SMALL_TABLE;
+				this.map[x][y+1] = Cells.N_CHAIR;
+			} else {
+				this.map[x][y+size-1] = Cells.SMALL_TABLE;
+				this.map[x][y+size-2] = Cells.S_CHAIR;
+			}
+			break;
+		case 'tableAndPiano':
+			if (!flip){
+				this.map[x][y] = Cells.S_PIANO;
+				this.map[x][y+1] = Cells.N_CHAIR;
+			} else {
+				this.map[x][y+size-1] = Cells.PIANO;
+				this.map[x][y+size-2] = Cells.S_CHAIR;
+			}
+			break;
+		default:
+			var y = flip ? y+size-1 : y;
+			this.map[x][y] = type;
+			break;
+		}
 	},
 	placeBlock: function(type, x,y,size, flip, quartersType){
 		switch (type){
@@ -418,12 +487,16 @@ RoomBuilder.prototype = {
 				this.map[x+size-2][y] = Cells.R_CHAIR;
 			}
 			break;
-		default:
-			if (!flip){
-				this.map[x][y] = type;
-			} else {
-				this.map[x+size-1][y] = type;
+		case 'tableAndPiano':
+			var x = flip ? x+size-1 : x;
+			if (this.map[x][y-1] !== Cells.BED_2 && this.map[x][y-1] !== Cells.BED_2){
+				this.map[x][y-1] = Cells.S_CHAIR;
+				this.map[x][y] = Cells.PIANO;
 			}
+			break;
+		default:
+			var x = flip ? x+size-1 : x;
+			this.map[x][y] = type;
 			break;
 		}
 	},

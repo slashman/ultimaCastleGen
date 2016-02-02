@@ -29,5 +29,8 @@ module.exports = {
 	SHELF: 'shelf',
 	PIANO: 'piano',
 	R_CHAIR: 'rChair',
-	L_CHAIR: 'lChair'
+	L_CHAIR: 'lChair',
+	S_CHAIR: 'sChair',
+	N_CHAIR: 'nChair',
+	S_PIANO: 'sPiano',
 };

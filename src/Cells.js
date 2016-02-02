@@ -27,5 +27,7 @@ module.exports = {
 	PLANT: 'plant',
 	MIRROR: 'mirror',
 	SHELF: 'shelf',
-	PIANO: 'piano'
+	PIANO: 'piano',
+	R_CHAIR: 'rChair',
+	L_CHAIR: 'lChair'
 };

@@ -361,9 +361,10 @@ RoomBuilder.prototype = {
 			return false;
 		}
 		// Table with chair?
-		/*if (quartersType != 'simple' && Random.chance(40)){
+		if (!room.placedElements["tableAndChair"] && quartersType != 'simple' && Random.chance(40)){
+			room.placedElements["tableAndChair"] = true;
 			return 'tableAndChair'
-		}*/
+		}
 		var additionalElements = false;
 		switch (quartersType){
 			case 'simple':
@@ -408,7 +409,15 @@ RoomBuilder.prototype = {
 				}
 			}
 			break;
-		//case Cells.LOCKER: case Cells.JAR_TABLE: case Cells.BARREL: case Cells.SMALL_TABLE: case Cells.PLANT: 
+		case 'tableAndChair':
+			if (!flip){
+				this.map[x][y] = Cells.SMALL_TABLE;
+				this.map[x+1][y] = Cells.L_CHAIR;
+			} else {
+				this.map[x+size-1][y] = Cells.SMALL_TABLE;
+				this.map[x+size-2][y] = Cells.R_CHAIR;
+			}
+			break;
 		default:
 			if (!flip){
 				this.map[x][y] = type;

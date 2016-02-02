@@ -77,6 +77,9 @@ CastleStructureGenerator.prototype = {
 		entranceStructure.openingWidth = Random.rand(1,entranceStructure.width-2);
 		if (entranceStructure.openingWidth % 2 == 0)
 			entranceStructure.openingWidth--;
+		entranceStructure.closingWidth = Random.rand(1,entranceStructure.width-2);
+		if (entranceStructure.closingWidth % 2 == 0)
+			entranceStructure.closingWidth--;
 		return entranceStructure;
 	},
 	selectTowers: function(){
@@ -231,6 +234,7 @@ CastleStructureGenerator.prototype = {
 				room.placeNorth = true;
 				room.southRoom = 'throneHall';
 				room.isBig = true;
+				room.level = 2;
 				break;
 			case 'lordQuarters':
 				room.piano = Random.chance(50);
@@ -266,14 +270,12 @@ CastleStructureGenerator.prototype = {
 			room.type = 'throneRoom';
 		} else if (!this.currentRooms.lordQuarters){
 			room.type = 'lordQuarters';
-		} else if (!this.currentRooms.livingQuarters){
-			room.type = 'livingQuarters';
 		} else if (!this.currentRooms.diningRoom){
 			room.type = 'diningRoom';
 		} else if (!this.currentRooms.kitchen){
 			room.type = 'kitchen';
 		} else {
-			var possibleRooms = ['livingQuarters', 'diningRoom', 'kitchen', 'prison', 'dungeon', 'hall', 'guestRoom', 'library'];
+			var possibleRooms = ['livingQuarters', 'diningRoom', 'kitchen', /*'prison', 'dungeon',*/ 'hall', 'guestRoom', 'library'];
 			if (!this.currentRooms.forge){
 				possibleRooms.push('forge');
 			}
@@ -318,9 +320,15 @@ MapGenerator.prototype = {
 		this.roomsGenerator = new RoomsGenerator();
 		this.terrainGenerator = new TerrainGenerator();
 		this.roomBuilder = new RoomBuilder();
+		
 		var castle = {};
-		castle.structure = this.castleStructureGenerator.generateMap(generationParams);
-		castle.rooms = this.roomsGenerator.generateMap(castle.structure, generationParams);
+		while (true){
+			castle.structure = this.castleStructureGenerator.generateMap(generationParams);
+			castle.rooms = this.roomsGenerator.generateMap(castle.structure, generationParams);
+			if (castle.rooms != false)
+				break;
+		}
+
 		castle.map = this.terrainGenerator.generateTerrain(generationParams);
 		this.roomBuilder.buildRooms(castle.map, castle.rooms);
 		return castle;
@@ -357,6 +365,9 @@ RoomBuilder.prototype = {
 				buildFunction.call(this, rooms[i]);
 			} else 
 				this.buildRoom(rooms[i]);
+		}
+		for (var i = 0; i < rooms.length; i++){
+			this.placeDoors(rooms[i]);
 		}
 	},
 	buildRoom: function(room){
@@ -511,14 +522,17 @@ RoomBuilder.prototype = {
 		}
 		if (room.features.hasSmallLake  && room.height > 6 &&  room.width > 6){
 			this.map[midx-1][midy] = Cells.WATER;
-			this.map[midx-1][midy+1] = Cells.WATER;
-			this.map[midx-1][midy-1] = Cells.WATER;
 			this.map[midx][midy+1] = Cells.WATER;
 			this.map[midx][midy] = Cells.WATER;
 			this.map[midx][midy-1] = Cells.WATER;
 			this.map[midx+1][midy] = Cells.WATER;
-			this.map[midx+1][midy+1] = Cells.WATER;
-			this.map[midx+1][midy-1] = Cells.WATER;
+
+			if (Random.chance(60) && room.height > 7 && room.width > 7){
+				this.map[midx-1][midy+1] = Cells.WATER;
+				this.map[midx-1][midy-1] = Cells.WATER;
+				this.map[midx+1][midy+1] = Cells.WATER;
+				this.map[midx+1][midy-1] = Cells.WATER;
+			}
 		}
 		if (room.features.centralFeature === 'fountain'){
 			this.map[midx][midy] = Cells.FOUNTAIN;
@@ -540,7 +554,7 @@ RoomBuilder.prototype = {
 			}
 		}
 	},
-	build_entrance: function(room){
+	build_entranceHall: function(room){
 		/*
 		entranceStructure.hasFloor = Random.chance(50);
 		entranceStructure.hasCrossWindows = Random.chance(50);
@@ -552,7 +566,7 @@ RoomBuilder.prototype = {
 			entranceStructure.width = 3;
 		*/
 		var halfOpening = Math.floor((room.width - room.features.openingWidth) / 2);
-		console.log("halfOpening", halfOpening);
+		var halfClosing = Math.floor((room.width - room.features.closingWidth) / 2);
 		for (var x = room.x; x < room.x + room.width; x++){
 			for (var y = room.y; y < room.y + room.height; y++){
 				if (x == room.x || x == room.x + room.width - 1){
@@ -563,9 +577,68 @@ RoomBuilder.prototype = {
 					} else {
 						this.map[x][y] = Cells.WALL;
 					}
+				} else if ((!room.features.isMain && y == room.y) || (room.features.isMain && y == room.y + room.height - 1) ){
+					if (x >= room.x+halfClosing && x <= room.x + room.width - halfClosing-1){
+						this.map[x][y] = Cells.FLOOR;
+					} else {
+						this.map[x][y] = Cells.WALL;
+					}
 				} else {
 					this.map[x][y] = Cells.FLOOR;
 				}
+			}
+		}
+	},
+	build_entrance: function(room){
+		/*
+		entranceStructure.hasFloor = Random.chance(50);
+		entranceStructure.hasCrossWindows = Random.chance(50);
+		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
+		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
+		entranceStructure.isMain = mainEntrance;
+		entranceStructure.width = this.castle.central.width - Random.rand(3, 6) * 2;
+		if (entranceStructure.width < 3)
+			entranceStructure.width = 3;
+		*/
+		for (var x = room.x; x < room.x + room.width; x++){
+			for (var y = room.y; y < room.y + room.height; y++){
+				this.map[x][y] = Cells.FLOOR;
+			}
+		}
+	},
+	placeDoors: function(room){
+		if (room.northDoors) for (var i = 0; i < room.northDoors.length; i++){
+			if (this.map[room.northDoors[i]][room.y-1] == Cells.WALL){
+				this.map[room.northDoors[i]][room.y-1] = Cells.FLOOR;
+				this.map[room.northDoors[i]][room.y] = Cells.FLOOR;
+			} else {
+				this.map[room.northDoors[i]][room.y] = Cells.DOOR;
+			}
+		}
+		if (room.southDoors) for (var i = 0; i < room.southDoors.length; i++){
+			if (this.map[room.southDoors[i]][room.y+room.height] == Cells.WALL){
+				this.map[room.southDoors[i]][room.y+room.height] = Cells.FLOOR;
+				this.map[room.southDoors[i]][room.y+room.height-1] = Cells.FLOOR;
+			} else {
+				this.map[room.southDoors[i]][room.y+room.height-1] = Cells.DOOR;
+			}
+		}
+
+		if (room.westDoors) for (var i = 0; i < room.westDoors.length; i++){
+			if (this.map[room.x-1][room.westDoors[i]] == Cells.WALL){
+				this.map[room.x-1][room.westDoors[i]] = Cells.FLOOR;
+				this.map[room.x][room.westDoors[i]] = Cells.FLOOR;
+			} else {
+				this.map[room.x][room.westDoors[i]] = Cells.DOOR;
+			}
+		}
+
+		if (room.eastDoors) for (var i = 0; i < room.eastDoors.length; i++){
+			if (this.map[room.x+room.width][room.eastDoors[i]] == Cells.WALL){
+				this.map[room.x+room.width][room.eastDoors[i]] = Cells.FLOOR;
+				this.map[room.x+room.width-1][room.eastDoors[i]] = Cells.FLOOR;
+			} else {
+				this.map[room.x+room.width-1][room.eastDoors[i]] = Cells.DOOR;
 			}
 		}
 	}
@@ -583,6 +656,7 @@ RoomsGenerator.prototype = {
 		this.structure = structure;
 		this.generationParams = generationParams;
 		this.rooms = [];
+		this.anchorPoints = {};
 		this.placeFoundations();
 		this.placeTowers();
 		this.placeCentralFeature();
@@ -590,16 +664,20 @@ RoomsGenerator.prototype = {
 		var retries = 0;
 		while(true){
 			var emptyRooms = this.placeRooms();
+			if (emptyRooms == false){
+				return false;
+			}
 			var assigned = this.assignRooms(emptyRooms);
 			if (!assigned){
 				if (retries++ < 50){
 					continue;
 				} else {
-					this.assignRooms(emptyRooms, true);
+					return false;
 				}
 			}
 			break;
 		}
+		this.linkRooms();
 		return this.rooms;
 	},
 	placeFoundations: function(){
@@ -631,25 +709,6 @@ RoomsGenerator.prototype = {
 
 	placeTowers: function(){
 		var def = this.structure.towers;
-		/*
-			{
-				size: 5, // 5, 7 or 9
-				crossWindows: true, // Defines if the walls have cross windows to the outside
-				circle: true, // Defines if the shape of the room is a circle
-				verticalConnections: false, // Defines if NW-SW and NE-SE towers are connected
-				horizontalConnections: 'both', // If 'both', NW-NE and SW-SE are connected, if 'top' only NW and NE are connected, if 'bottom' only SW and SW towers are connected
-				connectionCorridors: {
-					type: 'corridor' // If 'corridor', towers are linked by thin 1 space corridors. If 'halls' then they are connected by wide decorated halls.
-					hallDecoration: { // Only for halls
-						torches: true,
-						plants: false,
-						columns: false,
-						fountains: true
-					}
-					hallWidth: 4 // 3, 4 or 5
-				}
-			}
-		*/
 		//NW
 		this.addRoom(1, 1,'tower', 'Northwest Tower', def.size, def.size, {
 			shape: def.circle ? 'circle' : 'square',
@@ -699,7 +758,9 @@ RoomsGenerator.prototype = {
 				def.connectionCorridors.type, 'West '+def.connectionCorridors.type, 
 				connectionWidth, 
 				this.generationParams.height - 2 * def.size - 1,
-				def.hallDecoration
+				def.hallDecoration,
+				0,
+				true
 			);
 			// East corridor
 			this.addRoom(
@@ -708,61 +769,47 @@ RoomsGenerator.prototype = {
 				def.connectionCorridors.type, 'East '+def.connectionCorridors.type, 
 				connectionWidth, 
 				this.generationParams.height - 2 * def.size - 1,
-				def.hallDecoration
+				def.hallDecoration,
+				0,
+				true
 			);
 		}
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'top'){
 			// North corridor
+			this.anchorPoints.northBound = 1 + Math.floor(def.size / 2) - Math.floor(connectionWidth/2);
 			this.addRoom(
 				1 + def.size - 1, 
-				1 + Math.floor(def.size / 2) - Math.floor(connectionWidth/2), 
+				this.anchorPoints.northBound, 
 				def.connectionCorridors.type, 'North '+def.connectionCorridors.type, 
 				this.generationParams.width - 2 * def.size - 1,
 				connectionWidth, 
-				def.hallDecoration
+				def.hallDecoration,
+				0,
+				true
 			);
+		} else {
+			this.anchorPoints.northBound = 3;
 		}
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom'){
+			this.anchorPoints.southBound = this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2)+ ((def.size - connectionWidth)%2 != 0 ? 1 : 0) + connectionWidth;
 			// South corridor
 			this.addRoom(
 				1 + def.size - 1, 
-				this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2)+ ((def.size - connectionWidth)%2 != 0 ? 1 : 0), 
+				this.anchorPoints.southBound - connectionWidth,
 				def.connectionCorridors.type, 'South '+def.connectionCorridors.type, 
 				this.generationParams.width - 2 * def.size - 1,
 				connectionWidth, 
-				def.hallDecoration
+				def.hallDecoration,
+				0,
+				true
 			);
+		} else {
+			this.anchorPoints.southBound = this.generationParams.height - 4;
 		}
 	},
 	placeCentralFeature: function(){
-		/*
-		{
-			type: 'courtyard',
-			centralFeature: 'fountain', // 'fountain' / 'well'
-			additionalFountains: true, // only for 'fountain'
-			fountainSymmetry: 'x', // Only for 'fountain' with additionalFountains ['x', 'y', 'full'];
-			hasSmallLake: false // only for 'fountain'
-			connectionWithRooms: {
-				type: 'radial' // ['radial', 'around'],
-				terrain: 'floor'  // ['floor', 'dirt'])
-			},
-			width: 11, // 9, 11, 13, 15
-			height: 11, // 9, 11, 13, 15
-			shape: 'square' // ['square', 'circle', 'cross']
-		}
-
-		{
-			type: 'mainHall',
-			centralFeature: 'fountain', // 'fountain' / undefined
-			hasSpecialFloor: true, 
-			hasFireplace: true,
-			width: 11, // 9, 11, 13, 15
-			height: 11, // 9, 11, 13, 15
-			shape: 'square' // ['square', 'circle', 'cross']
-		}
-		*/
 		var def = this.structure.central;
-		this.addRoom(
+		this.centerRoom = this.addRoom(
 			Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
 			Math.floor(this.generationParams.height / 2) - Math.floor(def.height /2) - 1,
 			def.type,
@@ -774,18 +821,34 @@ RoomsGenerator.prototype = {
 	},
 	placeEntrances: function(){
 		var entranceLength = Math.floor(this.generationParams.height / 2) - Math.floor(this.structure.central.height /2) - 1;
+
 		// North entrance
 		if (this.structure.entrances.northExit){
 			var def = this.structure.entrances.northExit;
+			// Northern Exit
 			this.addRoom(
 				Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
 				0,
 				'entrance',
-				'North Entrance',
+				'Entrance',
 				def.width,
-				entranceLength + 1,
+				this.anchorPoints.northBound,
 				def,
-				1
+				1,
+				false
+			);
+
+			// Northern entrance hall
+			this.addRoom(
+				Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
+				this.anchorPoints.northBound,
+				'entranceHall',
+				'Entrance Hall',
+				def.width,
+				entranceLength - this.anchorPoints.northBound + 1,
+				def,
+				1,
+				false
 			);
 		}
 		// South Entrance
@@ -794,12 +857,24 @@ RoomsGenerator.prototype = {
 			this.addRoom(
 				Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
 				entranceLength + this.structure.central.height - 1,
-				'entrance',
-				'South Entrance',
+				'entranceHall',
+				'Entrance Hall',
 				def.width,
-				entranceLength,
+				this.anchorPoints.southBound - (entranceLength + this.structure.central.height - 1),
 				def,
-				1
+				1,
+				false
+			);
+			this.addRoom(
+				Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
+				this.anchorPoints.southBound,
+				'entrance',
+				'Entrance',
+				def.width,
+				this.generationParams.height - this.anchorPoints.southBound,
+				def,
+				1,
+				false
 			);
 		}
 
@@ -837,15 +912,17 @@ RoomsGenerator.prototype = {
 			h: yEnd - y + 1
 		};
 		// Brute force! Let's try a lot of times to fit the rooms in the space we have!
-		var roomsToPlace = Math.ceil(this.structure.rooms.length / 2);
+		var roomsToPlace = Math.ceil(this.structure.rooms.length / 2) + 1;
 		this.roomsArea = area;
-		var minHeight = 3;
-		var maxHeight = 5;
-		var minWidth = 3;
-		var maxWidth = 5;
+		var minHeight = 5;
+		var maxHeight = 7;
+		var minWidth = 5;
+		var maxWidth = 7;
 		var addedRooms = [];
-		for (var i = 0; i < 100; i++){
-			for (var j = 0; j < 1000; j++){
+		var placedRooms = 0;
+		var reduceRoomsToPlace = 100;
+		out: for (var i = 0; i < 500; i++){
+			for (var j = 0; j < 500; j++){
 				var room = {
 					x: Random.rand(area.x, area.x + area.w - 2 - minWidth),
 					y: Random.rand(area.y, area.y + area.h - 2 - minHeight),
@@ -854,16 +931,22 @@ RoomsGenerator.prototype = {
 				};
 				if (this.validRoom(room, addedRooms)){
 					addedRooms.push(room);
-					roomsToPlace--;
-					if (roomsToPlace == 0)
-						break;
+					placedRooms++;
+					if (placedRooms == roomsToPlace)
+						break out;
 				}
 			}
-			if (roomsToPlace == 0)
-				break;
-			roomsToPlace = Math.ceil(this.structure.rooms.length / 2);
+			if (reduceRoomsToPlace == 0){
+				if (roomsToPlace > 4)
+					roomsToPlace--;
+				reduceRoomsToPlace = 100;
+			} else {
+				reduceRoomsToPlace --; 
+			}
 			addedRooms = [];
 		}
+		if (placedRooms != roomsToPlace)
+			return false; // Couldn't place enough rooms, sucks!
 		
 		// Is the castle super symmetric? if not, we mirror the rooms before making them grow, and extend the play area
 		if (!this.structure.general.superSymmetric){
@@ -977,8 +1060,6 @@ RoomsGenerator.prototype = {
 				return false; // Give me better rooms!
 		}
 
-		var addedRooms = []; //TODO: Remove
-		
 		// Split the rooms by category
 		var northAvailableRooms = [];
 		var northBigAvailableRooms = [];
@@ -1034,20 +1115,20 @@ RoomsGenerator.prototype = {
 			Arrays.removeObject(bigAvailableRooms, room); 
 			Arrays.removeObject(otherAvailableRooms, room);
 			if (room){
-				addedRooms.push({x: room.x, y: room.y, name: requiredRoom.type, type: requiredRoom.type, w: room.w, h: room.h});	
+				this.addRoom(room.x, room.y, requiredRoom.type, requiredRoom.type, room.w, room.h, {}, requiredRoom.level, true);
 				// Place south rooms
 				if (requiredRoom.southRoom){
 					var southRoom = this.getRoomAt(rooms, room.x + Math.floor(room.w/2), room.y + room.h+2);
 					if (!southRoom){
 						// There's probably a hall, or the central feature which is fine.
 					} else {
-						addedRooms.push({x: southRoom.x, y: southRoom.y, name: requiredRoom.southRoom, type: requiredRoom.southRoom, w: southRoom.w, h: southRoom.h});
+						this.addRoom(southRoom.x, southRoom.y, requiredRoom.southRoom, requiredRoom.southRoom, southRoom.w, southRoom.h, {}, requiredRoom.level, true);
 						Arrays.removeObject(bigAvailableRooms, southRoom); // Available space used
 						Arrays.removeObject(otherAvailableRooms, southRoom); // Available space used
 					}
 				}
 			} else {
-				console.log("No room for "+requiredRoom.type)
+				return false; // Give me better rooms!
 			}
 		}
 
@@ -1055,14 +1136,7 @@ RoomsGenerator.prototype = {
 		var remainingRooms = northBigAvailableRooms.concat(northAvailableRooms).concat(bigAvailableRooms).concat(otherAvailableRooms);
 		for (var i = 0; i < remainingRooms.length; i++){
 			var availableRoom = remainingRooms[i];
-			addedRooms.push({x: availableRoom.x, y: availableRoom.y, name: 'hall*', type: 'hall*', w: availableRoom.w, h: availableRoom.h});
-		}
-			
-		// Officially add the rooms
-		// TODO: Not needed anymore
-		for (var i = 0; i < addedRooms.length; i++){
-			var room = addedRooms[i];
-			this.addRoom(room.x, room.y, room.type, room.type, room.w, room.h);
+			this.addRoom(availableRoom.x, availableRoom.y, 'hall*', 'hall*', availableRoom.w, availableRoom.h, {}, 0, true);
 		}
 		return true;
 	},
@@ -1117,6 +1191,18 @@ RoomsGenerator.prototype = {
 		}
 		return false;
 	},
+	getRealRoomAt: function(x,y,exclude){
+		for (var i = 0; i < this.rooms.length; i++){
+			var room = this.rooms[i];
+			if (room.type === 'rooms')
+				continue;
+			if (room == exclude)
+				continue;
+			if (x >= room.x && x < room.x + room.width && y >= room.y && y < room.y + room.height)
+				return room;
+		}
+		return false;
+	},
 	validRoom: function(room, tempRooms, skipRoom){
 		// Must be inside the rooms area
 		if (room.x >= this.roomsArea.x && room.x + room.w <= this.roomsArea.x + this.roomsArea.w &&
@@ -1150,8 +1236,8 @@ RoomsGenerator.prototype = {
 		}
 		return true;
 	},
-	addRoom: function(x, y, type, name, width, height, features, level){
-		this.rooms.push({
+	addRoom: function(x, y, type, name, width, height, features, level, linkeable){
+		var room = {
 			x: x,
 			y: y,
 			type: type,
@@ -1159,8 +1245,150 @@ RoomsGenerator.prototype = {
 			width: width,
 			height: height,
 			features: features,
-			level: level
-		});
+			level: level,
+			linkeable: linkeable
+		}
+		this.rooms.push(room);
+		return room;
+	},
+	linkRooms: function(){
+		// Starting from the courtyard or main hall, go into each direction connection rooms if possible
+		// Go westeros
+		var westRoom = this.getRealRoomAt(this.centerRoom.x - 1, this.centerRoom.y + Math.floor(this.centerRoom.height/2), this.centerRoom);
+		if (westRoom){
+			this.linkRoom(westRoom);
+			if (!this.centerRoom.westDoors){
+				this.centerRoom.westDoors = [];
+			}
+			this.centerRoom.westDoors.push(this.centerRoom.y + Math.floor(this.centerRoom.height/2));
+		}
+
+		// Go wessos
+		var eastRoom = this.getRealRoomAt(this.centerRoom.x + this.centerRoom.width, this.centerRoom.y + Math.floor(this.centerRoom.height/2), this.centerRoom);
+		if (eastRoom){
+			this.linkRoom(eastRoom);
+			if (!this.centerRoom.eastDoors)
+				this.centerRoom.eastDoors = [];
+			this.centerRoom.eastDoors.push(this.centerRoom.y + Math.floor(this.centerRoom.height/2));
+		}
+		
+
+		// At the end, for unconnected rooms, connect to nearby
+	},
+	linkRoom: function(room){
+		//First, get all nearby linkeable rooms, and take note of the segments
+		room.linkeable = false;
+		var northRooms = this.getLinkeableRooms(room, 'north');
+		var southRooms = this.getLinkeableRooms(room, 'south');
+		var westRooms = this.getLinkeableRooms(room, 'west');
+		var eastRooms = this.getLinkeableRooms(room, 'east');
+
+		//Then link using all the segments
+		for (var i = 0; i < northRooms.length; i++){
+			var segment = northRooms[i];
+			var x = Random.rand(segment.start, segment.end);
+			if (!room.northDoors)
+				room.northDoors = [];
+			room.northDoors.push(x);
+			this.linkRoom(segment.room);
+		}
+
+
+		for (var i = 0; i < southRooms.length; i++){
+			var segment = southRooms[i];
+			var x = Random.rand(segment.start, segment.end);
+			if (!room.southDoors)
+				room.southDoors = [];
+			room.southDoors.push(x);
+			this.linkRoom(segment.room);
+		}
+
+		for (var i = 0; i < westRooms.length; i++){
+			var segment = westRooms[i];
+			var x = Random.rand(segment.start, segment.end);
+			if (!room.westDoors)
+				room.westDoors = [];
+			room.westDoors.push(x);
+			this.linkRoom(segment.room);
+		}
+
+		for (var i = 0; i < eastRooms.length; i++){
+			var segment = eastRooms[i];
+			var x = Random.rand(segment.start, segment.end);
+			if (!room.eastDoors)
+				room.eastDoors = [];
+			room.eastDoors.push(x);
+			this.linkRoom(segment.room);
+		}
+	},
+	getLinkeableRooms: function(room, direction){
+		var currentSegment = false;
+		var segments = [];
+		switch (direction){
+		case 'north': case 'south':
+			start = room.x + 1;
+			end = room.x + room.width - 2;
+			break;
+		case  'west': case  'east':
+			start = room.y + 1;
+			end = room.y + room.height - 2;
+			break;
+		}
+		for (var x = start; x <= end; x++){
+			var nearRoom = false;
+			switch (direction){
+			case 'north':
+				nearRoom = this.getRealRoomAt(x, room.y - 1, room);
+				break;
+			case 'south':
+				nearRoom = this.getRealRoomAt(x, room.y + room.height+2, room);
+				break;
+			case 'west':
+				nearRoom = this.getRealRoomAt(room.x - 1, x, room);
+				break;
+			case 'east':
+				nearRoom = this.getRealRoomAt(room.x + room.width +2, x, room);
+				break;
+			}
+
+			if (nearRoom){
+				if (!currentSegment){
+					if (!nearRoom.linkeable)
+						continue;
+					currentSegment = {
+						start: x,
+						room: nearRoom
+					}
+					segments.push(currentSegment);
+				}
+				if (nearRoom == currentSegment.room){
+					// The segment continues
+				} else {
+					currentSegment.end = x - 2;
+					currentSegment.room.linkeable = false;
+					if (nearRoom.linkeable){
+						// New segment
+						currentSegment = {
+							start: x + 1,
+							room: nearRoom
+						}
+						segments.push(currentSegment);
+					} else {
+						currentSegment = false;
+					}
+				}
+			} else if (currentSegment){
+				// No room, segment ends
+				currentSegment.end = x - 2;
+				currentSegment.room.linkeable = false;
+				currentSegment = false;
+			}
+		}
+		if (currentSegment && !currentSegment.end){
+			currentSegment.end = end;
+		}
+		// room.segments = segments;
+		return segments;
 	}
 }
 

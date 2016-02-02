@@ -716,7 +716,7 @@ RoomsGenerator.prototype = {
 					if (!nearRoom.linkeable)
 						continue;
 					currentSegment = {
-						start: x,
+						start: x + 1,
 						room: nearRoom
 					}
 					segments.push(currentSegment);

@@ -323,15 +323,16 @@ RoomBuilder.prototype = {
 			rightSize = leftSize;
 			leftSize = temp;
 		} 
+		room.placedElements = {};
 		// Place furniture
 		for (var y = room.y+1; y < room.y + room.height - 1; y++){
 			if (leftSize){
-				var mainBlock = this.selectLivingQuartersBlock(y, quartersType);
+				var mainBlock = this.selectLivingQuartersBlock(room, y, quartersType);
 				if (mainBlock) 
 					this.placeBlock(mainBlock, room.x+1, y, leftSize, false, quartersType);
 			}
 			if (rightSize){
-				var mainBlock = this.selectLivingQuartersBlock(y, quartersType);
+				var mainBlock = this.selectLivingQuartersBlock(room, y, quartersType);
 				if (mainBlock) 
 					this.placeBlock(mainBlock, room.x+room.width-rightSize-1, y, rightSize, true, quartersType);
 			}
@@ -350,7 +351,7 @@ RoomBuilder.prototype = {
 		}
 		//TODO: Place Fireplaces
 	},
-	selectLivingQuartersBlock: function(y, quartersType){
+	selectLivingQuartersBlock: function(room, y, quartersType){
 		// Beds?
 		if (quartersType === 'simple' && ((y%2 == 0 && Random.chance(70)) || (y%2 != 0 && Random.chance(30)))){
 			return 'bed';
@@ -370,15 +371,21 @@ RoomBuilder.prototype = {
 				break;
 			case 'guestRoom':
 				additionalElements = [Cells.BARREL, Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
+				if (!room.placedElements[Cells.MIRROR])
+					additionalElements.push(Cells.MIRROR);
 				break;
 			case 'lord':
 				additionalElements = [Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
+				if (!room.placedElements[Cells.MIRROR])
+					additionalElements.push(Cells.MIRROR);
+				if (!room.placedElements[Cells.PIANO])
+					additionalElements.push(Cells.PIANO);
 				break;
 
 		}
-		//TODO: Add unique elements (Mirror and Piano) Cells.MIRROR, Cells.PIANO
-
-		return Random.randomElementOf(additionalElements);
+		var element = Random.randomElementOf(additionalElements);
+		room.placedElements[element] = true;
+		return element;
 	},
 	placeBlock: function(type, x,y,size, flip, quartersType){
 		switch (type){

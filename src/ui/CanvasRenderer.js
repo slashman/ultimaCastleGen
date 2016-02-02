@@ -1,7 +1,15 @@
 var Cells = require('../Cells');
 
+
+
 function CanvasRenderer(config){
 	this.config = config;
+	this.tiles = {};
+	for (key in Cells){
+		var val = Cells[key];
+		this.tiles[val] = new Image();
+		this.tiles[val].src = 'img/'+val+'.png';
+	}
 }
 
 CanvasRenderer.prototype = {
@@ -53,42 +61,13 @@ CanvasRenderer.prototype = {
 	drawLevelWithIcons: function(cells, canvas){
 		var canvas = document.getElementById(canvas);
 		var context = canvas.getContext('2d');
-		context.font="12px Georgia";
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		var zoom = 8;
-		var tiles = {};
-		tiles[Cells.FLOOR] = new Image();
-		tiles[Cells.FLOOR_2] = new Image();
-		tiles[Cells.WALL] = new Image();
-		tiles[Cells.GRASS_1] = new Image();
-		tiles[Cells.GRASS_2] = new Image();
-		tiles[Cells.DOOR] = new Image();
-		tiles[Cells.TREE] = new Image();
-		tiles[Cells.CROSS_WINDOW] = new Image();
-		tiles[Cells.FOUNTAIN] = new Image();
-		tiles[Cells.WELL] = new Image();
-		tiles[Cells.DIRT] = new Image();
-		tiles[Cells.WATER] = new Image();
-		tiles[Cells.FIREPLACE] = new Image();
-		tiles[Cells.FLOOR].src = 'img/floor.png';
-		tiles[Cells.FLOOR_2].src = 'img/floor2.png';
-		tiles[Cells.WALL].src = 'img/wall.png';
-		tiles[Cells.GRASS_1].src = 'img/grass1.png';
-		tiles[Cells.GRASS_2].src = 'img/grass2.png';
-		tiles[Cells.DOOR].src = 'img/door.png';
-		tiles[Cells.TREE].src = 'img/tree.png';
-		tiles[Cells.CROSS_WINDOW].src = 'img/crossWindow.png';
-		tiles[Cells.FOUNTAIN].src = 'img/fountain.png';
-		tiles[Cells.WELL].src = 'img/well.png';
-		tiles[Cells.DIRT].src = 'img/dirt.png';
-		tiles[Cells.WATER].src = 'img/water.png';
-		tiles[Cells.FIREPLACE].src = 'img/fireplace.png';
-
 		for (var x = 0; x < this.config.LEVEL_WIDTH; x++){
 			for (var y = 0; y < this.config.LEVEL_HEIGHT; y++){
 				var cell = cells[x][y]; 
 				if (cell)
-					context.drawImage(tiles[cell], x * 16, y * 16);
+					context.drawImage(this.tiles[cell], x * 14, y * 16);
 			}
 		}
 	}

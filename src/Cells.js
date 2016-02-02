@@ -33,4 +33,6 @@ module.exports = {
 	S_CHAIR: 'sChair',
 	N_CHAIR: 'nChair',
 	S_PIANO: 'sPiano',
+	CLOCK: 'clock',
+	SHELF_2: 'shelf2',
 };

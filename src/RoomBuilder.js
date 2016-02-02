@@ -31,6 +31,15 @@ RoomBuilder.prototype = {
 		}
 	},
 	build_tower: function(room){
+		if (room.features.walls.north == 'exit')
+			room.northDoors = [room.x + Math.floor(room.width/2)];
+		if (room.features.walls.south == 'exit')
+			room.southDoors = [room.x + Math.floor(room.width/2)];
+		if (room.features.walls.east == 'exit')
+			room.eastDoors = [room.y + Math.floor(room.height/2)];
+		if (room.features.walls.west == 'exit')
+			room.westDoors = [room.y + Math.floor(room.height/2)];
+
 		for (var x = room.x; x < room.x + room.width; x++){
 			for (var y = room.y; y < room.y + room.height; y++){
 				var wall = false;
@@ -53,11 +62,7 @@ RoomBuilder.prototype = {
 						else
 							this.map[x][y] = Cells.WALL;
 					} else if (wall === 'exit'){	
-						if (x === room.x + Math.floor(room.width/2) ||
-							y === room.y + Math.floor(room.height/2) )
-							this.map[x][y] = Cells.DOOR;
-						else
-							this.map[x][y] = Cells.WALL;
+						this.map[x][y] = Cells.WALL;
 					} else if (wall === 'open'){
 						this.map[x][y] = Cells.FLOOR;
 					}
@@ -340,7 +345,7 @@ RoomBuilder.prototype = {
 					this.placeBlock(mainBlock, room.x+room.width-rightSize-1, y, rightSize, true, quartersType);
 			}
 		}
-		for (var x = room.x+1; x < room.x + room.width - 1; x++){
+		for (var x = room.x+3; x < room.x + room.width - 3; x++){
 			if (topSize){
 				var mainBlock = this.selectLivingQuartersVBlock(room, quartersType);
 				if (mainBlock) 
@@ -388,13 +393,9 @@ RoomBuilder.prototype = {
 				break;
 			case 'guestRoom':
 				additionalElements = [Cells.BARREL, Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
-				if (!room.placedElements[Cells.MIRROR])
-					additionalElements.push(Cells.MIRROR);
 				break;
 			case 'lord':
 				additionalElements = [Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
-				if (!room.placedElements[Cells.MIRROR])
-					additionalElements.push(Cells.MIRROR);
 				break;
 
 		}
@@ -416,14 +417,16 @@ RoomBuilder.prototype = {
 				additionalElements = [Cells.BARREL, Cells.LOCKER, Cells.PLANT, Cells.SMALL_TABLE];
 				break;
 			case 'guestRoom':
-				additionalElements = [Cells.BARREL, Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
+				additionalElements = [Cells.BARREL, Cells.SHELF, Cells.SHELF_2, Cells.PLANT, Cells.JAR_TABLE];
 				if (!room.placedElements[Cells.MIRROR])
 					additionalElements.push(Cells.MIRROR);
 				break;
 			case 'lord':
-				additionalElements = [Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
+				additionalElements = [Cells.SHELF, Cells.SHELF_2,  Cells.PLANT, Cells.JAR_TABLE];
 				if (!room.placedElements[Cells.MIRROR])
 					additionalElements.push(Cells.MIRROR);
+				if (!room.placedElements[Cells.CLOCK])
+					additionalElements.push(Cells.CLOCK);
 				break;
 
 		}

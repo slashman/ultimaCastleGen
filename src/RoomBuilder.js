@@ -505,39 +505,42 @@ RoomBuilder.prototype = {
 	},
 	placeDoors: function(room){
 		if (room.northDoors) for (var i = 0; i < room.northDoors.length; i++){
-			if (this.map[room.northDoors[i]][room.y-1] == Cells.WALL){
-				this.map[room.northDoors[i]][room.y-1] = Cells.FLOOR;
-				this.map[room.northDoors[i]][room.y] = Cells.FLOOR;
-			} else {
-				this.map[room.northDoors[i]][room.y] = Cells.DOOR;
-			}
+			this.tryClear(room.northDoors[i],room.y-1)
+			this.map[room.northDoors[i]][room.y] = Cells.DOOR;
+			this.tryClear(room.northDoors[i],room.y+1)
 		}
 		if (room.southDoors) for (var i = 0; i < room.southDoors.length; i++){
-			if (this.map[room.southDoors[i]][room.y+room.height] == Cells.WALL){
-				this.map[room.southDoors[i]][room.y+room.height] = Cells.FLOOR;
-				this.map[room.southDoors[i]][room.y+room.height-1] = Cells.FLOOR;
-			} else {
-				this.map[room.southDoors[i]][room.y+room.height-1] = Cells.DOOR;
-			}
+			this.tryClear(room.southDoors[i],room.y+room.height);
+			this.map[room.southDoors[i]][room.y+room.height-1] = Cells.DOOR;
+			this.tryClear(room.southDoors[i],room.y+room.height-2);
 		}
-
 		if (room.westDoors) for (var i = 0; i < room.westDoors.length; i++){
-			if (this.map[room.x-1][room.westDoors[i]] == Cells.WALL){
-				this.map[room.x-1][room.westDoors[i]] = Cells.FLOOR;
-				this.map[room.x][room.westDoors[i]] = Cells.FLOOR;
-			} else {
-				this.map[room.x][room.westDoors[i]] = Cells.DOOR;
-			}
+			this.tryClear(room.x-1,room.westDoors[i]);
+			this.map[room.x][room.westDoors[i]] = Cells.DOOR;
+			this.tryClear(room.x+1,room.westDoors[i]);
 		}
 
 		if (room.eastDoors) for (var i = 0; i < room.eastDoors.length; i++){
-			if (this.map[room.x+room.width][room.eastDoors[i]] == Cells.WALL){
-				this.map[room.x+room.width][room.eastDoors[i]] = Cells.FLOOR;
-				this.map[room.x+room.width-1][room.eastDoors[i]] = Cells.FLOOR;
-			} else {
-				this.map[room.x+room.width-1][room.eastDoors[i]] = Cells.DOOR;
-			}
+			this.tryClear(room.x+room.width,room.eastDoors[i]);
+			this.map[room.x+room.width-1][room.eastDoors[i]] = Cells.DOOR;
+			this.tryClear(room.x+room.width-2,room.eastDoors[i]);
 		}
+	},
+	tryClear: function(x,y){
+		if (!this.isFloor(x,y)){
+			if (this.map[x][y] == Cells.BED_2)
+				this.map[x-1][y] = Cells.FLOOR;
+			if (this.map[x][y] == Cells.BED_1)
+				this.map[x+1][y] = Cells.FLOOR;	
+			this.map[x][y] = Cells.FLOOR;
+		}
+	},
+	isFloor: function(x,y){
+		return this.map[x][y] === Cells.FLOOR || 
+			this.map[x][y] === Cells.FLOOR_2 || 
+			this.map[x][y] === Cells.DIRT ||
+			this.map[x][y] === Cells.GRASS_1 ||
+			this.map[x][y] === Cells.GRASS_2; 
 	}
 }
 

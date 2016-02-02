@@ -492,11 +492,11 @@ RoomsGenerator.prototype = {
 			}
 		}
 
-		// Fill unused rooms with halls (?)
+		// Fill unused rooms with living quarters
 		var remainingRooms = northBigAvailableRooms.concat(northAvailableRooms).concat(bigAvailableRooms).concat(otherAvailableRooms);
 		for (var i = 0; i < remainingRooms.length; i++){
 			var availableRoom = remainingRooms[i];
-			this.addRoom(availableRoom.x, availableRoom.y, 'hall*', 'hall*', availableRoom.w, availableRoom.h, availableRoom, 0, true);
+			this.addRoom(availableRoom.x, availableRoom.y, 'livingQuarters', 'livingQuarters*', availableRoom.w, availableRoom.h, availableRoom, 0, true);
 		}
 		return true;
 	},
@@ -716,7 +716,7 @@ RoomsGenerator.prototype = {
 					if (!nearRoom.linkeable)
 						continue;
 					currentSegment = {
-						start: x + 2,
+						start: x + 1,
 						room: nearRoom
 					}
 					segments.push(currentSegment);
@@ -724,12 +724,12 @@ RoomsGenerator.prototype = {
 				if (nearRoom == currentSegment.room){
 					// The segment continues
 				} else {
-					currentSegment.end = x - 1;
+					currentSegment.end = x - 2;
 					currentSegment.room.linkeable = false;
 					if (nearRoom.linkeable){
 						// New segment
 						currentSegment = {
-							start: x + 2,
+							start: x + 1,
 							room: nearRoom
 						}
 						segments.push(currentSegment);
@@ -739,13 +739,13 @@ RoomsGenerator.prototype = {
 				}
 			} else if (currentSegment){
 				// No room, segment ends
-				currentSegment.end = x - 1;
+				currentSegment.end = x - 2;
 				currentSegment.room.linkeable = false;
 				currentSegment = false;
 			}
 		}
 		if (currentSegment && !currentSegment.end){
-			currentSegment.end = end - 2;
+			currentSegment.end = end - 1;
 		}
 		// room.segments = segments;
 		return segments;

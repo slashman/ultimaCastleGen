@@ -701,13 +701,13 @@ RoomsGenerator.prototype = {
 				nearRoom = this.getRealRoomAt(x, room.y - 1, room);
 				break;
 			case 'south':
-				nearRoom = this.getRealRoomAt(x, room.y + room.height+2, room);
+				nearRoom = this.getRealRoomAt(x, room.y + room.height+1, room);
 				break;
 			case 'west':
 				nearRoom = this.getRealRoomAt(room.x - 1, x, room);
 				break;
 			case 'east':
-				nearRoom = this.getRealRoomAt(room.x + room.width +2, x, room);
+				nearRoom = this.getRealRoomAt(room.x + room.width +1, x, room);
 				break;
 			}
 
@@ -716,7 +716,7 @@ RoomsGenerator.prototype = {
 					if (!nearRoom.linkeable)
 						continue;
 					currentSegment = {
-						start: x + 1,
+						start: x + 2,
 						room: nearRoom
 					}
 					segments.push(currentSegment);
@@ -724,12 +724,12 @@ RoomsGenerator.prototype = {
 				if (nearRoom == currentSegment.room){
 					// The segment continues
 				} else {
-					currentSegment.end = x - 2;
+					currentSegment.end = x - 1;
 					currentSegment.room.linkeable = false;
 					if (nearRoom.linkeable){
 						// New segment
 						currentSegment = {
-							start: x + 1,
+							start: x + 2,
 							room: nearRoom
 						}
 						segments.push(currentSegment);
@@ -739,13 +739,13 @@ RoomsGenerator.prototype = {
 				}
 			} else if (currentSegment){
 				// No room, segment ends
-				currentSegment.end = x - 2;
+				currentSegment.end = x - 1;
 				currentSegment.room.linkeable = false;
 				currentSegment = false;
 			}
 		}
 		if (currentSegment && !currentSegment.end){
-			currentSegment.end = end;
+			currentSegment.end = end - 2;
 		}
 		// room.segments = segments;
 		return segments;

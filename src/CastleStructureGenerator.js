@@ -250,9 +250,9 @@ CastleStructureGenerator.prototype = {
 			room.type = 'livingQuarters';
 		} else {
 			var possibleRooms = ['livingQuarters', 'diningRoom', 'kitchen', /*'prison', 'dungeon',*/ 'hall', 'guestRoom', 'library'];
-			if (!this.currentRooms.forge){
+			/*if (!this.currentRooms.forge){
 				possibleRooms.push('forge');
-			}
+			}*/
 			room.type = Random.randomElementOf(possibleRooms);
 		}
 		this.currentRooms[room.type] = true;

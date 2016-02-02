@@ -246,6 +246,8 @@ CastleStructureGenerator.prototype = {
 			room.type = 'diningRoom';
 		} else if (!this.currentRooms.kitchen){
 			room.type = 'kitchen';
+		} else if (!this.currentRooms.livingQuarters){
+			room.type = 'livingQuarters';
 		} else {
 			var possibleRooms = ['livingQuarters', 'diningRoom', 'kitchen', /*'prison', 'dungeon',*/ 'hall', 'guestRoom', 'library'];
 			if (!this.currentRooms.forge){

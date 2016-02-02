@@ -264,7 +264,7 @@ RoomsGenerator.prototype = {
 			h: yEnd - y + 1
 		};
 		// Brute force! Let's try a lot of times to fit the rooms in the space we have!
-		var roomsToPlace = Math.ceil(this.structure.rooms.length / 2) + 1;
+		var roomsToPlace = Math.ceil(this.structure.rooms.length / 2);
 		this.roomsArea = area;
 		var minHeight = 5;
 		var maxHeight = 7;
@@ -273,6 +273,13 @@ RoomsGenerator.prototype = {
 		var addedRooms = [];
 		var placedRooms = 0;
 		var reduceRoomsToPlace = 100;
+		// Place room connecting with courtyard
+		addedRooms.push({
+			x: this.centerRoom.x - 4,
+			y: this.centerRoom.y + Math.floor(this.centerRoom.height/2) - 2,
+			w: 5,
+			h: 5
+		});
 		out: for (var i = 0; i < 500; i++){
 			for (var j = 0; j < 500; j++){
 				var room = {

@@ -15,6 +15,9 @@ RoomBuilder.prototype = {
 			} else 
 				this.buildRoom(rooms[i]);
 		}
+		for (var i = 0; i < rooms.length; i++){
+			this.placeDoors(rooms[i]);
+		}
 	},
 	buildRoom: function(room){
 		for (var x = room.x; x < room.x + room.width; x++){
@@ -249,6 +252,42 @@ RoomBuilder.prototype = {
 		for (var x = room.x; x < room.x + room.width; x++){
 			for (var y = room.y; y < room.y + room.height; y++){
 				this.map[x][y] = Cells.FLOOR;
+			}
+		}
+	},
+	placeDoors: function(room){
+		if (room.northDoors) for (var i = 0; i < room.northDoors.length; i++){
+			if (this.map[room.northDoors[i]][room.y-1] == Cells.WALL){
+				this.map[room.northDoors[i]][room.y-1] = Cells.FLOOR;
+				this.map[room.northDoors[i]][room.y] = Cells.FLOOR;
+			} else {
+				this.map[room.northDoors[i]][room.y] = Cells.DOOR;
+			}
+		}
+		if (room.southDoors) for (var i = 0; i < room.southDoors.length; i++){
+			if (this.map[room.southDoors[i]][room.y+room.height] == Cells.WALL){
+				this.map[room.southDoors[i]][room.y+room.height] = Cells.FLOOR;
+				this.map[room.southDoors[i]][room.y+room.height-1] = Cells.FLOOR;
+			} else {
+				this.map[room.southDoors[i]][room.y+room.height-1] = Cells.DOOR;
+			}
+		}
+
+		if (room.westDoors) for (var i = 0; i < room.westDoors.length; i++){
+			if (this.map[room.x-1][room.westDoors[i]] == Cells.WALL){
+				this.map[room.x-1][room.westDoors[i]] = Cells.FLOOR;
+				this.map[room.x][room.westDoors[i]] = Cells.FLOOR;
+			} else {
+				this.map[room.x][room.westDoors[i]] = Cells.DOOR;
+			}
+		}
+
+		if (room.eastDoors) for (var i = 0; i < room.eastDoors.length; i++){
+			if (this.map[room.x+room.width][room.eastDoors[i]] == Cells.WALL){
+				this.map[room.x+room.width][room.eastDoors[i]] = Cells.FLOOR;
+				this.map[room.x+room.width-1][room.eastDoors[i]] = Cells.FLOOR;
+			} else {
+				this.map[room.x+room.width-1][room.eastDoors[i]] = Cells.DOOR;
 			}
 		}
 	}

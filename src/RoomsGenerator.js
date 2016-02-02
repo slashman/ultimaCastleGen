@@ -200,7 +200,7 @@ RoomsGenerator.prototype = {
 				entranceLength - this.anchorPoints.northBound + 1,
 				def,
 				1,
-				true
+				false
 			);
 		}
 		// South Entrance
@@ -543,10 +543,12 @@ RoomsGenerator.prototype = {
 		}
 		return false;
 	},
-	getRealRoomAt: function(x,y){
+	getRealRoomAt: function(x,y,exclude){
 		for (var i = 0; i < this.rooms.length; i++){
 			var room = this.rooms[i];
 			if (room.type === 'rooms')
+				continue;
+			if (room == exclude)
 				continue;
 			if (x >= room.x && x < room.x + room.width && y >= room.y && y < room.y + room.height)
 				return room;
@@ -604,80 +606,129 @@ RoomsGenerator.prototype = {
 	linkRooms: function(){
 		// Starting from the courtyard or main hall, go into each direction connection rooms if possible
 		// Go westeros
-		var westRoom = this.getRealRoomAt(this.centerRoom.x - 1, this.centerRoom.y + Math.floor(this.centerRoom.height/2));
+		var westRoom = this.getRealRoomAt(this.centerRoom.x - 1, this.centerRoom.y + Math.floor(this.centerRoom.height/2), this.centerRoom);
 		console.log("Linking "+this.centerRoom.type+" with "+westRoom.type);
 		this.linkRoom(westRoom);
+		// Go wessos
+		var eastRoom = this.getRealRoomAt(this.centerRoom.x + this.centerRoom.width, this.centerRoom.y + Math.floor(this.centerRoom.height/2), this.centerRoom);
+		console.log("Linking "+this.centerRoom.type+" with "+eastRoom.type);
+		this.linkRoom(eastRoom);
+
 		// At the end, for unconnected rooms, connect to nearby
 	},
 	linkRoom: function(room){
 		//First, get all nearby linkeable rooms, and take note of the segments
-		var northRooms = this.getNorthLinkeableRooms(room);
-		/*var southRooms = this.getSouthLinkeableRooms(room);
-		var eastRooms = this.getEastLinkeableRooms(room);
-		var westRooms = this.getWestLinkeableRooms(room);*/
+		room.linkeable = false;
+		var northRooms = this.getLinkeableRooms(room, 'north');
+		var southRooms = this.getLinkeableRooms(room, 'south');
+		var westRooms = this.getLinkeableRooms(room, 'west');
+		var eastRooms = this.getLinkeableRooms(room, 'east');
+
 		//Then link using all the segments
-		console.log(northRooms);
 		for (var i = 0; i < northRooms.length; i++){
 			var segment = northRooms[i];
 			var x = Random.rand(segment.start, segment.end);
 			if (!room.northDoors)
 				room.northDoors = [];
 			room.northDoors.push(x);
-			// TODO: Link the rooms related with the segments, recursively
+			this.linkRoom(segment.room);
 		}
-		/*for (var i = 0; i < southRooms.length; i++){
+
+
+		for (var i = 0; i < southRooms.length; i++){
 			var segment = southRooms[i];
 			var x = Random.rand(segment.start, segment.end);
-			this.map[x][room.y + room.height - 1] = Cells.DOOR;
+			if (!room.southDoors)
+				room.southDoors = [];
+			room.southDoors.push(x);
+			this.linkRoom(segment.room);
 		}
-		for (var i = 0; i < eastRooms.length; i++){
-			var segment = eastRooms[i];
-			var y = Random.rand(segment.start, segment.end);
-			this.map[room.x + room.width - 1][y] = Cells.DOOR;
-		}
+
 		for (var i = 0; i < westRooms.length; i++){
 			var segment = westRooms[i];
-			var y = Random.rand(segment.start, segment.end);
-			this.map[room.x][y] = Cells.DOOR;
-		}*/
+			var x = Random.rand(segment.start, segment.end);
+			if (!room.westDoors)
+				room.westDoors = [];
+			room.westDoors.push(x);
+			this.linkRoom(segment.room);
+		}
+
+		for (var i = 0; i < eastRooms.length; i++){
+			var segment = eastRooms[i];
+			var x = Random.rand(segment.start, segment.end);
+			if (!room.eastDoors)
+				room.eastDoors = [];
+			room.eastDoors.push(x);
+			this.linkRoom(segment.room);
+		}
 	},
-	getNorthLinkeableRooms: function(room){
+	getLinkeableRooms: function(room, direction){
 		var currentSegment = false;
 		var segments = [];
-		console.log("x "+(room.x + 1)+" to "+(room.x + room.width));
-		for (var x = room.x + 1; x <= room.x + room.width; x++){
+		switch (direction){
+		case 'north': case 'south':
+			start = room.x + 1;
+			end = room.x + room.width - 2;
+			break;
+		case  'west': case  'east':
+			start = room.y + 1;
+			end = room.y + room.height - 2;
+			break;
+		}
+		for (var x = start; x <= end; x++){
+			var nearRoom = false;
+			switch (direction){
+			case 'north':
+				nearRoom = this.getRealRoomAt(x, room.y - 1, room);
+				break;
+			case 'south':
+				nearRoom = this.getRealRoomAt(x, room.y + room.height+2, room);
+				break;
+			case 'west':
+				nearRoom = this.getRealRoomAt(room.x - 1, x, room);
+				break;
+			case 'east':
+				nearRoom = this.getRealRoomAt(room.x + room.width +2, x, room);
+				break;
+			}
 
-			var room = this.getRealRoomAt(x, room.y - 2);
-			if (room){
+			if (nearRoom){
 				if (!currentSegment){
-					if (!room.linkeable)
+					if (!nearRoom.linkeable)
 						continue;
 					currentSegment = {
 						start: x,
-						room: room
+						room: nearRoom
 					}
 					segments.push(currentSegment);
 				}
-				if (room == currentSegment.room){
+				if (nearRoom == currentSegment.room){
 					// The segment continues
-					console.log("The segment continues")
 				} else {
-					currentSegment.end = x;
+					currentSegment.end = x - 2;
 					currentSegment.room.linkeable = false;
-					if (room.linkeable){
+					if (nearRoom.linkeable){
 						// New segment
 						currentSegment = {
-							start: x,
-							room: room
+							start: x + 1,
+							room: nearRoom
 						}
 						segments.push(currentSegment);
 					} else {
 						currentSegment = false;
 					}
 				}
+			} else if (currentSegment){
+				// No room, segment ends
+				currentSegment.end = x - 2;
+				currentSegment.room.linkeable = false;
+				currentSegment = false;
 			}
 		}
-		room.segments = segments;
+		if (currentSegment && !currentSegment.end){
+			currentSegment.end = end;
+		}
+		// room.segments = segments;
 		return segments;
 	}
 }

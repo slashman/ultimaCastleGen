@@ -304,6 +304,43 @@ RoomBuilder.prototype = {
 		// Place door
 		room.southDoors = [midx];
 	},
+	build_livingQuarters: function(room){
+		this.buildRoom(room);
+		var map = this.map;
+		function placeBlock(x,y,size, flip){
+			if (Random.chance(70))
+				if (!flip){
+					map[x][y] = Cells.BED_1;
+					map[x+1][y] = Cells.BED_2;
+					if (size > 2){
+						map[x+2][y] = Cells.LOCKER;	
+					}
+				} else {
+					if (size > 2){
+						map[x+1][y] = Cells.BED_1;
+						map[x+2][y] = Cells.BED_2;
+						map[x][y] = Cells.LOCKER;	
+					} else {
+						map[x][y] = Cells.BED_1;
+						map[x+1][y] = Cells.BED_2;
+					}
+				}
+			
+		}
+		for (var y = room.y+1; y < room.y + room.height - 1; y++){
+			if (y%2 == 0){
+				placeBlock(room.x+1, y, room.width >= 6 ? 3 : 2, false);
+				if (room.width >= 8){
+					var size = 2;
+					if (room.width > 8){
+						size = 3;
+					}
+					placeBlock(room.x+room.width-size-1, y, size, true);
+				}
+			} 
+		}
+		//TODO: Place teapot tables, plants, barrles, additional lockers, chairs+small table. Table instead of locker. Shelfs
+	},
 	placeDoors: function(room){
 		if (room.northDoors) for (var i = 0; i < room.northDoors.length; i++){
 			if (this.map[room.northDoors[i]][room.y-1] == Cells.WALL){

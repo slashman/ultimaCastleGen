@@ -18,5 +18,8 @@ module.exports = {
 	THRONE: 'throne',
 	ORB: 'orb',
 	SMALL_TABLE: 'smallTable',
-	MAGIC_CARPET: 'magicCarpet'
+	MAGIC_CARPET: 'magicCarpet',
+	BED_1: 'bed1',
+	BED_2: 'bed2',
+	LOCKER: 'locker'
 };

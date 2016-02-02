@@ -25,11 +25,11 @@ RoomsGenerator.prototype = {
 					continue;
 				} else {
 					return false;
-					//this.assignRooms(emptyRooms, true);
 				}
 			}
 			break;
 		}
+		this.linkRooms();
 		return this.rooms;
 	},
 	placeFoundations: function(){
@@ -110,7 +110,9 @@ RoomsGenerator.prototype = {
 				def.connectionCorridors.type, 'West '+def.connectionCorridors.type, 
 				connectionWidth, 
 				this.generationParams.height - 2 * def.size - 1,
-				def.hallDecoration
+				def.hallDecoration,
+				0,
+				true
 			);
 			// East corridor
 			this.addRoom(
@@ -119,7 +121,9 @@ RoomsGenerator.prototype = {
 				def.connectionCorridors.type, 'East '+def.connectionCorridors.type, 
 				connectionWidth, 
 				this.generationParams.height - 2 * def.size - 1,
-				def.hallDecoration
+				def.hallDecoration,
+				0,
+				true
 			);
 		}
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'top'){
@@ -131,7 +135,9 @@ RoomsGenerator.prototype = {
 				def.connectionCorridors.type, 'North '+def.connectionCorridors.type, 
 				this.generationParams.width - 2 * def.size - 1,
 				connectionWidth, 
-				def.hallDecoration
+				def.hallDecoration,
+				0,
+				true
 			);
 		} else {
 			this.anchorPoints.northBound = 3;
@@ -145,7 +151,9 @@ RoomsGenerator.prototype = {
 				def.connectionCorridors.type, 'South '+def.connectionCorridors.type, 
 				this.generationParams.width - 2 * def.size - 1,
 				connectionWidth, 
-				def.hallDecoration
+				def.hallDecoration,
+				0,
+				true
 			);
 		} else {
 			this.anchorPoints.southBound = this.generationParams.height - 4;
@@ -153,7 +161,7 @@ RoomsGenerator.prototype = {
 	},
 	placeCentralFeature: function(){
 		var def = this.structure.central;
-		this.addRoom(
+		this.centerRoom = this.addRoom(
 			Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
 			Math.floor(this.generationParams.height / 2) - Math.floor(def.height /2) - 1,
 			def.type,
@@ -178,7 +186,8 @@ RoomsGenerator.prototype = {
 				def.width,
 				this.anchorPoints.northBound,
 				def,
-				1
+				1,
+				false
 			);
 
 			// Northern entrance hall
@@ -190,7 +199,8 @@ RoomsGenerator.prototype = {
 				def.width,
 				entranceLength - this.anchorPoints.northBound + 1,
 				def,
-				1
+				1,
+				true
 			);
 		}
 		// South Entrance
@@ -204,7 +214,8 @@ RoomsGenerator.prototype = {
 				def.width,
 				this.anchorPoints.southBound - (entranceLength + this.structure.central.height - 1),
 				def,
-				1
+				1,
+				false
 			);
 			this.addRoom(
 				Math.floor(this.generationParams.width / 2) - Math.floor(def.width /2) - 1,
@@ -214,7 +225,8 @@ RoomsGenerator.prototype = {
 				def.width,
 				this.generationParams.height - this.anchorPoints.southBound,
 				def,
-				1
+				1,
+				false
 			);
 		}
 
@@ -400,8 +412,6 @@ RoomsGenerator.prototype = {
 				return false; // Give me better rooms!
 		}
 
-		var addedRooms = []; //TODO: Remove
-		
 		// Split the rooms by category
 		var northAvailableRooms = [];
 		var northBigAvailableRooms = [];
@@ -457,14 +467,14 @@ RoomsGenerator.prototype = {
 			Arrays.removeObject(bigAvailableRooms, room); 
 			Arrays.removeObject(otherAvailableRooms, room);
 			if (room){
-				addedRooms.push({x: room.x, y: room.y, name: requiredRoom.type, type: requiredRoom.type, w: room.w, h: room.h, level: requiredRoom.level});
+				this.addRoom(room.x, room.y, requiredRoom.type, requiredRoom.type, room.w, room.h, {}, requiredRoom.level, true);
 				// Place south rooms
 				if (requiredRoom.southRoom){
 					var southRoom = this.getRoomAt(rooms, room.x + Math.floor(room.w/2), room.y + room.h+2);
 					if (!southRoom){
 						// There's probably a hall, or the central feature which is fine.
 					} else {
-						addedRooms.push({x: southRoom.x, y: southRoom.y, name: requiredRoom.southRoom, type: requiredRoom.southRoom, w: southRoom.w, h: southRoom.h, level: requiredRoom.level});
+						this.addRoom(southRoom.x, southRoom.y, requiredRoom.southRoom, requiredRoom.southRoom, southRoom.w, southRoom.h, {}, requiredRoom.level, true);
 						Arrays.removeObject(bigAvailableRooms, southRoom); // Available space used
 						Arrays.removeObject(otherAvailableRooms, southRoom); // Available space used
 					}
@@ -478,14 +488,7 @@ RoomsGenerator.prototype = {
 		var remainingRooms = northBigAvailableRooms.concat(northAvailableRooms).concat(bigAvailableRooms).concat(otherAvailableRooms);
 		for (var i = 0; i < remainingRooms.length; i++){
 			var availableRoom = remainingRooms[i];
-			addedRooms.push({x: availableRoom.x, y: availableRoom.y, name: 'hall*', type: 'hall*', w: availableRoom.w, h: availableRoom.h, level: 0});
-		}
-			
-		// Officially add the rooms
-		// TODO: Not needed anymore
-		for (var i = 0; i < addedRooms.length; i++){
-			var room = addedRooms[i];
-			this.addRoom(room.x, room.y, room.type, room.type, room.w, room.h, {}, room.level);
+			this.addRoom(availableRoom.x, availableRoom.y, 'hall*', 'hall*', availableRoom.w, availableRoom.h, {}, 0, true);
 		}
 		return true;
 	},
@@ -540,6 +543,16 @@ RoomsGenerator.prototype = {
 		}
 		return false;
 	},
+	getRealRoomAt: function(x,y){
+		for (var i = 0; i < this.rooms.length; i++){
+			var room = this.rooms[i];
+			if (room.type === 'rooms')
+				continue;
+			if (x >= room.x && x < room.x + room.width && y >= room.y && y < room.y + room.height)
+				return room;
+		}
+		return false;
+	},
 	validRoom: function(room, tempRooms, skipRoom){
 		// Must be inside the rooms area
 		if (room.x >= this.roomsArea.x && room.x + room.w <= this.roomsArea.x + this.roomsArea.w &&
@@ -573,8 +586,8 @@ RoomsGenerator.prototype = {
 		}
 		return true;
 	},
-	addRoom: function(x, y, type, name, width, height, features, level){
-		this.rooms.push({
+	addRoom: function(x, y, type, name, width, height, features, level, linkeable){
+		var room = {
 			x: x,
 			y: y,
 			type: type,
@@ -582,8 +595,90 @@ RoomsGenerator.prototype = {
 			width: width,
 			height: height,
 			features: features,
-			level: level
-		});
+			level: level,
+			linkeable: linkeable
+		}
+		this.rooms.push(room);
+		return room;
+	},
+	linkRooms: function(){
+		// Starting from the courtyard or main hall, go into each direction connection rooms if possible
+		// Go westeros
+		var westRoom = this.getRealRoomAt(this.centerRoom.x - 1, this.centerRoom.y + Math.floor(this.centerRoom.height/2));
+		console.log("Linking "+this.centerRoom.type+" with "+westRoom.type);
+		this.linkRoom(westRoom);
+		// At the end, for unconnected rooms, connect to nearby
+	},
+	linkRoom: function(room){
+		//First, get all nearby linkeable rooms, and take note of the segments
+		var northRooms = this.getNorthLinkeableRooms(room);
+		/*var southRooms = this.getSouthLinkeableRooms(room);
+		var eastRooms = this.getEastLinkeableRooms(room);
+		var westRooms = this.getWestLinkeableRooms(room);*/
+		//Then link using all the segments
+		console.log(northRooms);
+		for (var i = 0; i < northRooms.length; i++){
+			var segment = northRooms[i];
+			var x = Random.rand(segment.start, segment.end);
+			if (!room.northDoors)
+				room.northDoors = [];
+			room.northDoors.push(x);
+			// TODO: Link the rooms related with the segments, recursively
+		}
+		/*for (var i = 0; i < southRooms.length; i++){
+			var segment = southRooms[i];
+			var x = Random.rand(segment.start, segment.end);
+			this.map[x][room.y + room.height - 1] = Cells.DOOR;
+		}
+		for (var i = 0; i < eastRooms.length; i++){
+			var segment = eastRooms[i];
+			var y = Random.rand(segment.start, segment.end);
+			this.map[room.x + room.width - 1][y] = Cells.DOOR;
+		}
+		for (var i = 0; i < westRooms.length; i++){
+			var segment = westRooms[i];
+			var y = Random.rand(segment.start, segment.end);
+			this.map[room.x][y] = Cells.DOOR;
+		}*/
+	},
+	getNorthLinkeableRooms: function(room){
+		var currentSegment = false;
+		var segments = [];
+		console.log("x "+(room.x + 1)+" to "+(room.x + room.width));
+		for (var x = room.x + 1; x <= room.x + room.width; x++){
+
+			var room = this.getRealRoomAt(x, room.y - 2);
+			if (room){
+				if (!currentSegment){
+					if (!room.linkeable)
+						continue;
+					currentSegment = {
+						start: x,
+						room: room
+					}
+					segments.push(currentSegment);
+				}
+				if (room == currentSegment.room){
+					// The segment continues
+					console.log("The segment continues")
+				} else {
+					currentSegment.end = x;
+					currentSegment.room.linkeable = false;
+					if (room.linkeable){
+						// New segment
+						currentSegment = {
+							start: x,
+							room: room
+						}
+						segments.push(currentSegment);
+					} else {
+						currentSegment = false;
+					}
+				}
+			}
+		}
+		room.segments = segments;
+		return segments;
 	}
 }
 

@@ -262,8 +262,13 @@ RoomBuilder.prototype = {
 	},
 	build_throneRoom: function(room){
 		// Pad room
+		var modifiedWidth = false;
 		if (room.width % 2 == 0){
 			room.width--;
+			for (var y = room.y; y < room.y + room.height; y++){
+				this.map[room.x+room.width-1][y] = Cells.WALL;
+			}
+			modifiedWidth = true;
 		}
 		this.buildRoom(room);
 		var midx = room.x+Math.floor(room.width/2);
@@ -308,6 +313,9 @@ RoomBuilder.prototype = {
 		}
 		// Place door
 		room.southDoors = [midx];
+		if (modifiedWidth){
+			room.width++;
+		}
 	},
 	build_livingQuarters: function(room){
 		this.buildLivingQuarters(room, 'simple');

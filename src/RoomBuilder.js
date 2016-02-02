@@ -255,6 +255,55 @@ RoomBuilder.prototype = {
 			}
 		}
 	},
+	build_throneRoom: function(room){
+		// Pad room
+		if (room.width % 2 == 0){
+			room.width--;
+		}
+		this.buildRoom(room);
+		var midx = room.x+Math.floor(room.width/2);
+		// Place throne
+		this.map[midx][room.y+1] = Cells.THRONE;
+		if (room.features.hasSecondaryThrone)
+			this.map[midx-1][room.y+1] = Cells.SMALL_TABLE;
+		if (room.features.hasMagicOrb)
+			this.map[midx+1][room.y+1] = Cells.ORB;
+		if (room.features.hasMagicCarpet)
+			this.map[midx][room.y+2] = Cells.MAGIC_CARPET;
+
+		var columnsPosition = Random.rand(2, Math.floor(room.width/2) - 2);
+		var columnsSpacing = Random.rand(2,3);
+		var torchesSpacing = Random.rand(2,3);
+		var placeColumns = room.features.linedWithColumns && room.width >= 9;
+		var placeTorches = room.features.linedWithTorches && room.width >= 9;
+		var placeSmallCarpet = true;
+		var placeBigCarpet = room.width >= 7;
+		var carpetStart = room.features.hasMagicCarpet ? room.y + 3 : room.y + 2;
+
+		for (var y = room.y+1; y < room.y + room.height - 1; y++){
+			// Place carpet
+			if (room.features.hasCarpet) if (y >= carpetStart){
+				if (placeSmallCarpet)
+					this.map[midx][y] = Cells.FLOOR_2;
+				if (placeBigCarpet){
+					this.map[midx-1][y] = Cells.FLOOR_2;
+					this.map[midx+1][y] = Cells.FLOOR_2;
+				}
+			}
+			// Place columns	
+			if (placeColumns) if (y % columnsSpacing == 0){
+				this.map[room.x+columnsPosition][y] = Cells.COLUMN;
+				this.map[room.x+room.width-columnsPosition-1][y] = Cells.COLUMN;
+			}
+			// Place torches
+			if (placeTorches) if ((y+1) % torchesSpacing == 0){
+				this.map[room.x+1][y] = Cells.L_TORCH;
+				this.map[room.x+room.width-2][y] = Cells.R_TORCH;
+			}
+		}
+		// Place door
+		room.southDoors = [midx];
+	},
 	placeDoors: function(room){
 		if (room.northDoors) for (var i = 0; i < room.northDoors.length; i++){
 			if (this.map[room.northDoors[i]][room.y-1] == Cells.WALL){

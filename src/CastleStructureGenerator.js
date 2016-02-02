@@ -197,12 +197,14 @@ CastleStructureGenerator.prototype = {
 				break;
 			case 'throneRoom':
 				room.hasCarpet = Random.chance(70);
+				room.hasMagicCarpet = Random.chance(20);
 				room.linedWithColumns = Random.chance(30);
 				room.linedWithTorches = Random.chance(70);
 				room.hasSecondaryThrone = Random.chance(50);
 				room.hasMagicOrb = Random.chance(50);
 				room.placeNorth = true;
 				room.southRoom = 'throneHall';
+				room.linkeable = false;
 				room.isBig = true;
 				room.level = 2;
 				break;

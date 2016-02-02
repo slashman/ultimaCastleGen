@@ -12,4 +12,11 @@ module.exports = {
 	WELL: 'well',
 	DIRT: 'dirt',
 	FIREPLACE: 'fireplace',
+	COLUMN: 'column',
+	R_TORCH: 'rTorch',
+	L_TORCH: 'lTorch',
+	THRONE: 'throne',
+	ORB: 'orb',
+	SMALL_TABLE: 'smallTable',
+	MAGIC_CARPET: 'magicCarpet'
 };

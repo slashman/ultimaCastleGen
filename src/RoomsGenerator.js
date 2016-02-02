@@ -467,14 +467,15 @@ RoomsGenerator.prototype = {
 			Arrays.removeObject(bigAvailableRooms, room); 
 			Arrays.removeObject(otherAvailableRooms, room);
 			if (room){
-				this.addRoom(room.x, room.y, requiredRoom.type, requiredRoom.type, room.w, room.h, {}, requiredRoom.level, true);
+				var linkeable = requiredRoom.linkeable != undefined ?  requiredRoom.linkeable : true;
+				this.addRoom(room.x, room.y, requiredRoom.type, requiredRoom.type, room.w, room.h, requiredRoom, requiredRoom.level, linkeable);
 				// Place south rooms
 				if (requiredRoom.southRoom){
 					var southRoom = this.getRoomAt(rooms, room.x + Math.floor(room.w/2), room.y + room.h+2);
 					if (!southRoom){
 						// There's probably a hall, or the central feature which is fine.
 					} else {
-						this.addRoom(southRoom.x, southRoom.y, requiredRoom.southRoom, requiredRoom.southRoom, southRoom.w, southRoom.h, {}, requiredRoom.level, true);
+						this.addRoom(southRoom.x, southRoom.y, requiredRoom.southRoom, requiredRoom.southRoom, southRoom.w, southRoom.h, requiredRoom, requiredRoom.level, true);
 						Arrays.removeObject(bigAvailableRooms, southRoom); // Available space used
 						Arrays.removeObject(otherAvailableRooms, southRoom); // Available space used
 					}
@@ -488,7 +489,7 @@ RoomsGenerator.prototype = {
 		var remainingRooms = northBigAvailableRooms.concat(northAvailableRooms).concat(bigAvailableRooms).concat(otherAvailableRooms);
 		for (var i = 0; i < remainingRooms.length; i++){
 			var availableRoom = remainingRooms[i];
-			this.addRoom(availableRoom.x, availableRoom.y, 'hall*', 'hall*', availableRoom.w, availableRoom.h, {}, 0, true);
+			this.addRoom(availableRoom.x, availableRoom.y, 'hall*', 'hall*', availableRoom.w, availableRoom.h, availableRoom, 0, true);
 		}
 		return true;
 	},

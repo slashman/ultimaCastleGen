@@ -607,12 +607,23 @@ RoomsGenerator.prototype = {
 		// Starting from the courtyard or main hall, go into each direction connection rooms if possible
 		// Go westeros
 		var westRoom = this.getRealRoomAt(this.centerRoom.x - 1, this.centerRoom.y + Math.floor(this.centerRoom.height/2), this.centerRoom);
-		console.log("Linking "+this.centerRoom.type+" with "+westRoom.type);
-		this.linkRoom(westRoom);
+		if (westRoom){
+			this.linkRoom(westRoom);
+			if (!this.centerRoom.westDoors){
+				this.centerRoom.westDoors = [];
+			}
+			this.centerRoom.westDoors.push(this.centerRoom.y + Math.floor(this.centerRoom.height/2));
+		}
+
 		// Go wessos
 		var eastRoom = this.getRealRoomAt(this.centerRoom.x + this.centerRoom.width, this.centerRoom.y + Math.floor(this.centerRoom.height/2), this.centerRoom);
-		console.log("Linking "+this.centerRoom.type+" with "+eastRoom.type);
-		this.linkRoom(eastRoom);
+		if (eastRoom){
+			this.linkRoom(eastRoom);
+			if (!this.centerRoom.eastDoors)
+				this.centerRoom.eastDoors = [];
+			this.centerRoom.eastDoors.push(this.centerRoom.y + Math.floor(this.centerRoom.height/2));
+		}
+		
 
 		// At the end, for unconnected rooms, connect to nearby
 	},

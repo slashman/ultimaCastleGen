@@ -305,41 +305,111 @@ RoomBuilder.prototype = {
 		room.southDoors = [midx];
 	},
 	build_livingQuarters: function(room){
+		this.buildLivingQuarters(room, 'simple');
+	},
+	build_guestRoom: function(room){
+		this.buildLivingQuarters(room, 'guestRoom');
+	},
+	build_lordQuarters: function(room){
+		this.buildLivingQuarters(room, 'lord');
+	},
+	buildLivingQuarters: function(room, quartersType){
 		this.buildRoom(room);
-		var map = this.map;
-		function placeBlock(x,y,size, flip){
-			if (Random.chance(70))
-				if (!flip){
-					map[x][y] = Cells.BED_1;
-					map[x+1][y] = Cells.BED_2;
-					if (size > 2){
-						map[x+2][y] = Cells.LOCKER;	
-					}
-				} else {
-					if (size > 2){
-						map[x+1][y] = Cells.BED_1;
-						map[x+2][y] = Cells.BED_2;
-						map[x][y] = Cells.LOCKER;	
-					} else {
-						map[x][y] = Cells.BED_1;
-						map[x+1][y] = Cells.BED_2;
-					}
-				}
-			
-		}
+		var leftSize = room.width >= 6 ? 3 : 2;
+		var rightSize = room.width >= 8 ? room.width > 8 ? 3 : 2 : 0;
+		if (Random.chance(50)){
+			// Flip sides
+			var temp = rightSize;
+			rightSize = leftSize;
+			leftSize = temp;
+		} 
+		// Place furniture
 		for (var y = room.y+1; y < room.y + room.height - 1; y++){
-			if (y%2 == 0){
-				placeBlock(room.x+1, y, room.width >= 6 ? 3 : 2, false);
-				if (room.width >= 8){
-					var size = 2;
-					if (room.width > 8){
-						size = 3;
-					}
-					placeBlock(room.x+room.width-size-1, y, size, true);
-				}
-			} 
+			if (leftSize){
+				var mainBlock = this.selectLivingQuartersBlock(y, quartersType);
+				if (mainBlock) 
+					this.placeBlock(mainBlock, room.x+1, y, leftSize, false, quartersType);
+			}
+			if (rightSize){
+				var mainBlock = this.selectLivingQuartersBlock(y, quartersType);
+				if (mainBlock) 
+					this.placeBlock(mainBlock, room.x+room.width-rightSize-1, y, rightSize, true, quartersType);
+			}
 		}
-		//TODO: Place teapot tables, plants, barrles, additional lockers, chairs+small table. Table instead of locker. Shelfs
+		if (quartersType != 'simple'){
+			// Place bed(s) for royal and guest quarters
+			var numberOfBeds = quartersType === 'guestRoom' ? 2 : 1;
+			for (var i = 0; i < numberOfBeds; i++){
+				var y = Random.rand(room.y+1, room.y + room.height - 2 - (quartersType === 'lord' ? 1 : 0));
+				if (leftSize){
+					this.placeBlock('bed', room.x+1, y, leftSize, false, quartersType);
+				} else if (rightSize){
+					this.placeBlock('bed', room.x+room.width-rightSize-1, y, rightSize, true, quartersType);
+				}
+			}
+		}
+		//TODO: Place Fireplaces
+	},
+	selectLivingQuartersBlock: function(y, quartersType){
+		// Beds?
+		if (quartersType === 'simple' && ((y%2 == 0 && Random.chance(70)) || (y%2 != 0 && Random.chance(30)))){
+			return 'bed';
+		}
+		// Nothing?
+		if (Random.chance(20)){
+			return false;
+		}
+		// Table with chair?
+		/*if (quartersType != 'simple' && Random.chance(40)){
+			return 'tableAndChair'
+		}*/
+		var additionalElements = false;
+		switch (quartersType){
+			case 'simple':
+				additionalElements = [Cells.BARREL, Cells.LOCKER, Cells.PLANT, Cells.SMALL_TABLE];
+				break;
+			case 'guestRoom':
+				additionalElements = [Cells.BARREL, Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
+				break;
+			case 'lord':
+				additionalElements = [Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
+				break;
+
+		}
+		//TODO: Add unique elements (Mirror and Piano) Cells.MIRROR, Cells.PIANO
+
+		return Random.randomElementOf(additionalElements);
+	},
+	placeBlock: function(type, x,y,size, flip, quartersType){
+		switch (type){
+		case 'bed':
+			if (!flip){
+				this.map[x][y] = Cells.BED_1;
+				this.map[x+1][y] = Cells.BED_2;
+				if (size > 2 && quartersType === 'simple'){
+					this.map[x+2][y] = Random.chance(70) ? Cells.LOCKER : Cells.SMALL_TABLE;	
+				}
+			} else {
+				if (size > 2){
+					this.map[x+1][y] = Cells.BED_1;
+					this.map[x+2][y] = Cells.BED_2;
+					if (quartersType === 'simple')
+						this.map[x][y] = Random.chance(70) ? Cells.LOCKER : Cells.SMALL_TABLE;	
+				} else {
+					this.map[x][y] = Cells.BED_1;
+					this.map[x+1][y] = Cells.BED_2;
+				}
+			}
+			break;
+		//case Cells.LOCKER: case Cells.JAR_TABLE: case Cells.BARREL: case Cells.SMALL_TABLE: case Cells.PLANT: 
+		default:
+			if (!flip){
+				this.map[x][y] = type;
+			} else {
+				this.map[x+size-1][y] = type;
+			}
+			break;
+		}
 	},
 	placeDoors: function(room){
 		if (room.northDoors) for (var i = 0; i < room.northDoors.length; i++){

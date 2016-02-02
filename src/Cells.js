@@ -21,5 +21,11 @@ module.exports = {
 	MAGIC_CARPET: 'magicCarpet',
 	BED_1: 'bed1',
 	BED_2: 'bed2',
-	LOCKER: 'locker'
+	LOCKER: 'locker',
+	JAR_TABLE: 'jarTable',
+	BARREL: 'barrel',
+	PLANT: 'plant',
+	MIRROR: 'mirror',
+	SHELF: 'shelf',
+	PIANO: 'piano'
 };

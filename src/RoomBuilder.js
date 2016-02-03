@@ -30,6 +30,17 @@ RoomBuilder.prototype = {
 			}
 		}
 	},
+	build_rooms: function(room){ // Foundations
+		for (var x = room.x; x < room.x + room.width; x++){
+			for (var y = room.y; y < room.y + room.height; y++){
+				if (x == room.x || x == room.x + room.width - 1 || y == room.y || y == room.y + room.height - 1){
+					this.map[x][y] = Cells.WALL;
+				} else {
+					this.map[x][y] = Random.chance(80) ? Cells.FLOOR : Cells.CHEST;
+				}
+			}
+		}
+	},
 	build_tower: function(room){
 		if (room.features.walls.north == 'exit')
 			room.northDoors = [{position: room.x + Math.floor(room.width/2), cell: Cells.DOOR}];

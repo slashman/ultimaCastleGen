@@ -46,5 +46,6 @@ module.exports = {
 	OVEN: 'oven',
 	WINE_BARREL: 'wineBarrel',
 	LIBRARY_1: 'library1',
-	LIBRARY_2: 'library2'
+	LIBRARY_2: 'library2',
+	CHEST: 'chest'
 };

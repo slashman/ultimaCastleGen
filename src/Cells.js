@@ -44,5 +44,7 @@ module.exports = {
 	WALL_FIREPLACE: 'firewall',
 	GRILL: 'grill',
 	OVEN: 'oven',
-	WINE_BARREL: 'wineBarrel'
+	WINE_BARREL: 'wineBarrel',
+	LIBRARY_1: 'library1',
+	LIBRARY_2: 'library2'
 };

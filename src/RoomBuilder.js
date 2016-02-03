@@ -385,6 +385,9 @@ RoomBuilder.prototype = {
 			case 'kitchen':
 				additionalElements = [Cells.WINE_BARREL, Cells.OVEN,  Cells.BARREL, Cells.GRILL, 'tableAndChair'];
 				break;
+			case 'library':
+				additionalElements = ['bookshelf', 'tableAndChair', Cells.PLANT, Cells.SHELF_2];
+				break;
 
 		}
 		var element = Random.randomElementOf(additionalElements);
@@ -418,6 +421,11 @@ RoomBuilder.prototype = {
 				break;
 			case 'kitchen':
 				additionalElements = [Cells.WINE_BARREL, Cells.OVEN,  Cells.BARREL, Cells.GRILL];
+				break;
+			case 'library':
+				additionalElements = [Cells.PLANT, Cells.SHELF_2];
+				if (!room.placedElements[Cells.CLOCK])
+					additionalElements.push(Cells.CLOCK);
 				break;
 
 		}
@@ -504,6 +512,15 @@ RoomBuilder.prototype = {
 				}
 			}
 			break;
+		case 'bookshelf':
+			if (flip){
+				this.map[x+size-2][y] = Cells.LIBRARY_1;
+				this.map[x+size-1][y] = Cells.LIBRARY_2;	
+			} else {
+				this.map[x][y] = Cells.LIBRARY_1;
+				this.map[x+1][y] = Cells.LIBRARY_2;	
+			}
+			break;
 		case 'upChairs':
 			if (size === 1){
 				this.map[x][y] = Cells.N_CHAIR;
@@ -568,6 +585,10 @@ RoomBuilder.prototype = {
 			if (this.map[x][y] === Cells.BED_2)
 				this.map[x-1][y] = Cells.FLOOR;
 			if (this.map[x][y] === Cells.BED_1)
+				this.map[x+1][y] = Cells.FLOOR;
+			if (this.map[x][y] === Cells.LIBRARY_2)
+				this.map[x-1][y] = Cells.FLOOR;
+			if (this.map[x][y] === Cells.LIBRARY_1)
 				this.map[x+1][y] = Cells.FLOOR;	
 			if (this.map[x][y] === Cells.R_TABLE){
 				if (this.map[x-1][y] === Cells.L_TABLE){
@@ -599,6 +620,8 @@ RoomBuilder.prototype = {
 			this.map[x][y] === Cells.C_TABLE_2 || 
 			this.map[x][y] === Cells.C_TABLE_3 || 
 			this.map[x][y] === Cells.C_TABLE_4 || 
+			this.map[x][y] === Cells.LIBRARY_1 || 
+			this.map[x][y] === Cells.LIBRARY_2 ||
 			this.map[x][y] === Cells.BED_1 ||
 			this.map[x][y] === Cells.BED_2; 
 	},
@@ -655,6 +678,9 @@ RoomBuilder.prototype = {
 	},
 	build_kitchen: function(room){
 		this.buildLivingQuarters(room, 'kitchen');
+	},
+	build_library: function(room){
+		this.buildLivingQuarters(room, 'library');
 	}
 }
 

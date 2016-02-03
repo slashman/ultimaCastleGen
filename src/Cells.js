@@ -35,4 +35,10 @@ module.exports = {
 	S_PIANO: 'sPiano',
 	CLOCK: 'clock',
 	SHELF_2: 'shelf2',
+	R_TABLE: 'rTable',
+	L_TABLE: 'lTable',
+	C_TABLE_1: 'cTable1',
+	C_TABLE_2: 'cTable2',
+	C_TABLE_3: 'cTable3',
+	C_TABLE_4: 'cTable4',
 };

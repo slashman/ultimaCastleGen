@@ -505,6 +505,36 @@ RoomBuilder.prototype = {
 				this.map[x][y] = Cells.PIANO;
 			}
 			break;
+		case 'diningTable':
+			if (size == 1){
+				this.map[x][y] = Cells.SMALL_TABLE;
+			} else {
+				this.map[x][y] = Cells.L_TABLE;
+				this.map[x+size-1][y] = Cells.R_TABLE;
+				for (var i = 0; i < size-2; i++){
+					switch (Random.rand(0,3)){
+						case 0: this.map[x+1+i][y] = Cells.C_TABLE_1; break;
+						case 1: this.map[x+1+i][y] = Cells.C_TABLE_2; break;
+						case 2: this.map[x+1+i][y] = Cells.C_TABLE_3; break;
+						case 3: this.map[x+1+i][y] = Cells.C_TABLE_4; break;
+					}
+				}
+			}
+			break;
+		case 'upChairs':
+			if (size === 1){
+				this.map[x][y] = Cells.N_CHAIR;
+			} else for (var i = x; i < x+size-1; i++){
+				if (Random.chance(80)) this.map[i][y] = Cells.N_CHAIR;
+			}
+		break;
+		case 'downChairs':
+			if (size === 1){
+				this.map[x][y] = Cells.S_CHAIR;
+			} else for (var i = x+1; i < x+size; i++){
+				if (Random.chance(80)) this.map[i][y] = Cells.S_CHAIR;
+			}
+		break;
 		default:
 			var x = flip ? x+size-1 : x;
 			this.map[x][y] = type;
@@ -536,10 +566,23 @@ RoomBuilder.prototype = {
 	},
 	tryClear: function(x,y){
 		if (!this.isFloor(x,y)){
-			if (this.map[x][y] == Cells.BED_2)
+			if (this.map[x][y] === Cells.BED_2)
 				this.map[x-1][y] = Cells.FLOOR;
-			if (this.map[x][y] == Cells.BED_1)
+			if (this.map[x][y] === Cells.BED_1)
 				this.map[x+1][y] = Cells.FLOOR;	
+			if (this.map[x][y] === Cells.R_TABLE){
+				if (this.map[x-1][y] === Cells.L_TABLE){
+					this.map[x-1][y] = Cells.SMALL_TABLE;
+				} else {
+					this.map[x-1][y] = Cells.R_TABLE;
+				}
+			} else if (this.map[x][y] === Cells.L_TABLE){
+				if (this.map[x+1][y] === Cells.R_TABLE){
+					this.map[x+1][y] = Cells.SMALL_TABLE;
+				} else {
+					this.map[x+1][y] = Cells.L_TABLE;
+				}
+			}
 			this.map[x][y] = Cells.FLOOR;
 		}
 	},
@@ -549,6 +592,34 @@ RoomBuilder.prototype = {
 			this.map[x][y] === Cells.DIRT ||
 			this.map[x][y] === Cells.GRASS_1 ||
 			this.map[x][y] === Cells.GRASS_2; 
+	},
+	build_diningRoom: function(room){
+		var tableLength = room.width - 3;
+		this.buildRoom(room);
+		var leftSize = Random.chance(50);
+		room.placedElements = {};
+		// Place tables and chairs
+		var location = Random.rand(room.x+1, room.x+room.width-tableLength-1);
+		for (var y = room.y+1; y < room.y + room.height - 1; y++){
+			var phase = (y-room.y)%3;
+			if (phase == 1){
+				if ((room.y+room.height)-y<4)
+					break;
+				location = Random.rand(room.x+1, room.x+room.width-tableLength-1);
+			}
+			switch(phase){
+				case 0:
+					this.placeBlock('upChairs', location, y, tableLength, false, 'diningRoom');
+					break;
+				case 1:
+					this.placeBlock('downChairs', location, y, tableLength, false, 'diningRoom');
+					break;
+				case 2:
+					this.placeBlock('diningTable', location, y, tableLength, false, 'diningRoom');
+					break;
+			}
+			
+		}
 	}
 }
 

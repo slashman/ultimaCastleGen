@@ -47,5 +47,6 @@ module.exports = {
 	WINE_BARREL: 'wineBarrel',
 	LIBRARY_1: 'library1',
 	LIBRARY_2: 'library2',
-	CHEST: 'chest'
+	CHEST: 'chest',
+	FAKE_WALL: 'fakeWall'
 };

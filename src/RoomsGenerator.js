@@ -1,5 +1,6 @@
 var Random = require('./Random');
 var Arrays = require('./Arrays');
+var Cells = require('./Cells');
 
 function RoomsGenerator(){};
 
@@ -620,7 +621,7 @@ RoomsGenerator.prototype = {
 			if (!this.centerRoom.westDoors){
 				this.centerRoom.westDoors = [];
 			}
-			this.centerRoom.westDoors.push(this.centerRoom.y + Math.floor(this.centerRoom.height/2));
+			this.centerRoom.westDoors.push({position: this.centerRoom.y + Math.floor(this.centerRoom.height/2), cell: Cells.DOOR});
 		}
 
 		// Go wessos
@@ -629,7 +630,7 @@ RoomsGenerator.prototype = {
 			this.linkRoom(eastRoom);
 			if (!this.centerRoom.eastDoors)
 				this.centerRoom.eastDoors = [];
-			this.centerRoom.eastDoors.push(this.centerRoom.y + Math.floor(this.centerRoom.height/2));
+			this.centerRoom.eastDoors.push({position: this.centerRoom.y + Math.floor(this.centerRoom.height/2), cell: Cells.DOOR});
 		}
 		
 
@@ -649,7 +650,7 @@ RoomsGenerator.prototype = {
 			var x = Random.rand(segment.start, segment.end);
 			if (!room.northDoors)
 				room.northDoors = [];
-			room.northDoors.push(x);
+			room.northDoors.push({position: x, cell: Cells.DOOR});
 			this.linkRoom(segment.room);
 		}
 
@@ -659,7 +660,7 @@ RoomsGenerator.prototype = {
 			var x = Random.rand(segment.start, segment.end);
 			if (!room.southDoors)
 				room.southDoors = [];
-			room.southDoors.push(x);
+			room.southDoors.push({position: x, cell: Cells.DOOR});
 			this.linkRoom(segment.room);
 		}
 
@@ -668,7 +669,7 @@ RoomsGenerator.prototype = {
 			var x = Random.rand(segment.start, segment.end);
 			if (!room.westDoors)
 				room.westDoors = [];
-			room.westDoors.push(x);
+			room.westDoors.push({position: x, cell: Cells.DOOR});
 			this.linkRoom(segment.room);
 		}
 
@@ -677,7 +678,7 @@ RoomsGenerator.prototype = {
 			var x = Random.rand(segment.start, segment.end);
 			if (!room.eastDoors)
 				room.eastDoors = [];
-			room.eastDoors.push(x);
+			room.eastDoors.push({position: x, cell: Cells.DOOR});
 			this.linkRoom(segment.room);
 		}
 	},

@@ -41,4 +41,5 @@ module.exports = {
 	C_TABLE_2: 'cTable2',
 	C_TABLE_3: 'cTable3',
 	C_TABLE_4: 'cTable4',
+	WALL_FIREPLACE: 'firewall'
 };

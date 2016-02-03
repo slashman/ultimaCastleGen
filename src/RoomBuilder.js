@@ -32,13 +32,13 @@ RoomBuilder.prototype = {
 	},
 	build_tower: function(room){
 		if (room.features.walls.north == 'exit')
-			room.northDoors = [room.x + Math.floor(room.width/2)];
+			room.northDoors = [{position: room.x + Math.floor(room.width/2), cell: Cells.DOOR}];
 		if (room.features.walls.south == 'exit')
-			room.southDoors = [room.x + Math.floor(room.width/2)];
+			room.southDoors = [{position: room.x + Math.floor(room.width/2), cell: Cells.DOOR}];
 		if (room.features.walls.east == 'exit')
-			room.eastDoors = [room.y + Math.floor(room.height/2)];
+			room.eastDoors = [{position: room.y + Math.floor(room.height/2), cell: Cells.DOOR}];
 		if (room.features.walls.west == 'exit')
-			room.westDoors = [room.y + Math.floor(room.height/2)];
+			room.westDoors = [{position: room.y + Math.floor(room.height/2), cell: Cells.DOOR}];
 
 		for (var x = room.x; x < room.x + room.width; x++){
 			for (var y = room.y; y < room.y + room.height; y++){
@@ -312,7 +312,7 @@ RoomBuilder.prototype = {
 			}
 		}
 		// Place door
-		room.southDoors = [midx];
+		room.southDoors = [{position: midx, cell: Cells.DOOR}];
 		if (modifiedWidth){
 			room.width++;
 		}
@@ -377,9 +377,10 @@ RoomBuilder.prototype = {
 					this.placeBlock('bed', room.x+room.width-rightSize-1, y, rightSize, true, quartersType);
 				}
 			}
+			this.addWallFireplace(room);
 		}
 		this.addTorchesToRoom(room);
-		//TODO: Place Fireplaces
+		
 	},
 	selectLivingQuartersBlock: function(room, y, quartersType){
 		// Beds?
@@ -544,25 +545,41 @@ RoomBuilder.prototype = {
 	},
 	placeDoors: function(room){
 		if (room.northDoors) for (var i = 0; i < room.northDoors.length; i++){
-			this.tryClear(room.northDoors[i],room.y-1)
-			this.map[room.northDoors[i]][room.y] = Cells.DOOR;
-			this.tryClear(room.northDoors[i],room.y+1)
+			var door = room.northDoors[i];
+			if (door.cell === Cells.DOOR){
+				this.tryClear(door.position,room.y-1)
+				this.tryClear(door.position,room.y+1)
+			}
+			if (this.map[door.position][room.y] === Cells.WALL)
+				this.map[door.position][room.y] = door.cell;
 		}
 		if (room.southDoors) for (var i = 0; i < room.southDoors.length; i++){
-			this.tryClear(room.southDoors[i],room.y+room.height);
-			this.map[room.southDoors[i]][room.y+room.height-1] = Cells.DOOR;
-			this.tryClear(room.southDoors[i],room.y+room.height-2);
+			var door = room.southDoors[i];
+			if (door.cell === Cells.DOOR){
+				this.tryClear(door.position,room.y+room.height);
+				this.tryClear(door.position,room.y+room.height-2);
+			}
+			if (this.map[door.position][room.y+room.height-1] === Cells.WALL)
+				this.map[door.position][room.y+room.height-1] = door.cell;
 		}
 		if (room.westDoors) for (var i = 0; i < room.westDoors.length; i++){
-			this.tryClear(room.x-1,room.westDoors[i]);
-			this.map[room.x][room.westDoors[i]] = Cells.DOOR;
-			this.tryClear(room.x+1,room.westDoors[i]);
+			var door = room.westDoors[i];
+			if (door.cell === Cells.DOOR){
+				this.tryClear(room.x-1,door.position);
+				this.tryClear(room.x+1,door.position);
+			}
+			if (this.map[room.x][door.position] === Cells.WALL)
+				this.map[room.x][door.position] = door.cell;
 		}
 
 		if (room.eastDoors) for (var i = 0; i < room.eastDoors.length; i++){
-			this.tryClear(room.x+room.width,room.eastDoors[i]);
-			this.map[room.x+room.width-1][room.eastDoors[i]] = Cells.DOOR;
-			this.tryClear(room.x+room.width-2,room.eastDoors[i]);
+			var door = room.eastDoors[i];
+			if (door.cell === Cells.DOOR){
+				this.tryClear(room.x+room.width,door.position);
+				this.tryClear(room.x+room.width-2,door.position);
+			}
+			if (this.map[room.x+room.width-1][door.position] === Cells.WALL)
+				this.map[room.x+room.width-1][door.position] = door.cell;
 		}
 	},
 	tryClear: function(x,y){
@@ -630,6 +647,7 @@ RoomBuilder.prototype = {
 					break;
 			}
 		}
+		this.addWallFireplace(room);
 		this.addTorchesToRoom(room);
 	},
 	addTorchesToRoom: function(room){
@@ -645,6 +663,14 @@ RoomBuilder.prototype = {
 				y++;
 			}
 		}
+	},
+	addWallFireplace: function(room){
+		var wall = room.northDoors;
+		if (!wall) {
+			wall = [];
+			room.northDoors = wall;
+		}
+		wall.push({cell: Cells.WALL_FIREPLACE, position: Random.rand(room.x+1, room.x+room.width - 2)});
 	}
 }
 

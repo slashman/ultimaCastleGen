@@ -791,7 +791,10 @@ RoomBuilder.prototype = {
 				additionalElements = ['bookshelf', 'tableAndChair', Cells.PLANT, Cells.SHELF_2];
 				break;
 			case 'hall':
-				additionalElements = [Cells.PLANT, Cells.FOUNTAIN];
+				additionalElements = [Cells.PLANT];
+				if (!room.placedElements[Cells.FOUNTAIN])
+					additionalElements.push(Cells.FOUNTAIN);
+				break;
 
 		}
 		var element = Random.randomElementOf(additionalElements);
@@ -830,6 +833,11 @@ RoomBuilder.prototype = {
 				additionalElements = [Cells.PLANT, Cells.SHELF_2];
 				if (!room.placedElements[Cells.CLOCK])
 					additionalElements.push(Cells.CLOCK);
+				break;
+			case 'hall':
+				additionalElements = [Cells.PLANT];
+				if (!room.placedElements[Cells.FOUNTAIN])
+					additionalElements.push(Cells.FOUNTAIN);
 				break;
 
 		}

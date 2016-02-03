@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/home/administrator/git/ultimacastlegen/src/Arrays.js":[function(require,module,exports){
 module.exports = {
     shuffle: function(array) {
         var counter = array.length;
@@ -27,7 +27,7 @@ module.exports = {
         }
     }
 }
-},{}],2:[function(require,module,exports){
+},{}],"/home/administrator/git/ultimacastlegen/src/CastleStructureGenerator.js":[function(require,module,exports){
 var Random = require('./Random');
 
 function CastleStructureGenerator(){};
@@ -227,12 +227,14 @@ CastleStructureGenerator.prototype = {
 				break;
 			case 'throneRoom':
 				room.hasCarpet = Random.chance(70);
+				room.hasMagicCarpet = Random.chance(20);
 				room.linedWithColumns = Random.chance(30);
 				room.linedWithTorches = Random.chance(70);
 				room.hasSecondaryThrone = Random.chance(50);
 				room.hasMagicOrb = Random.chance(50);
 				room.placeNorth = true;
 				room.southRoom = 'throneHall';
+				room.linkeable = false;
 				room.isBig = true;
 				room.level = 2;
 				break;
@@ -274,11 +276,13 @@ CastleStructureGenerator.prototype = {
 			room.type = 'diningRoom';
 		} else if (!this.currentRooms.kitchen){
 			room.type = 'kitchen';
+		} else if (!this.currentRooms.livingQuarters){
+			room.type = 'livingQuarters';
 		} else {
 			var possibleRooms = ['livingQuarters', 'diningRoom', 'kitchen', /*'prison', 'dungeon',*/ 'hall', 'guestRoom', 'library'];
-			if (!this.currentRooms.forge){
+			/*if (!this.currentRooms.forge){
 				possibleRooms.push('forge');
-			}
+			}*/
 			room.type = Random.randomElementOf(possibleRooms);
 		}
 		this.currentRooms[room.type] = true;
@@ -287,7 +291,7 @@ CastleStructureGenerator.prototype = {
 }
 
 module.exports = CastleStructureGenerator;
-},{"./Random":5}],3:[function(require,module,exports){
+},{"./Random":"/home/administrator/git/ultimacastlegen/src/Random.js"}],"/home/administrator/git/ultimacastlegen/src/Cells.js":[function(require,module,exports){
 module.exports = {
 	WALL: 'wall',
 	FLOOR: 'floor',
@@ -302,8 +306,44 @@ module.exports = {
 	WELL: 'well',
 	DIRT: 'dirt',
 	FIREPLACE: 'fireplace',
+	COLUMN: 'column',
+	R_TORCH: 'rTorch',
+	L_TORCH: 'lTorch',
+	THRONE: 'throne',
+	ORB: 'orb',
+	SMALL_TABLE: 'smallTable',
+	MAGIC_CARPET: 'magicCarpet',
+	BED_1: 'bed1',
+	BED_2: 'bed2',
+	LOCKER: 'locker',
+	JAR_TABLE: 'jarTable',
+	BARREL: 'barrel',
+	PLANT: 'plant',
+	MIRROR: 'mirror',
+	SHELF: 'shelf',
+	PIANO: 'piano',
+	R_CHAIR: 'rChair',
+	L_CHAIR: 'lChair',
+	S_CHAIR: 'sChair',
+	N_CHAIR: 'nChair',
+	S_PIANO: 'sPiano',
+	CLOCK: 'clock',
+	SHELF_2: 'shelf2',
+	R_TABLE: 'rTable',
+	L_TABLE: 'lTable',
+	C_TABLE_1: 'cTable1',
+	C_TABLE_2: 'cTable2',
+	C_TABLE_3: 'cTable3',
+	C_TABLE_4: 'cTable4',
+	WALL_FIREPLACE: 'firewall',
+	GRILL: 'grill',
+	OVEN: 'oven',
+	WINE_BARREL: 'wineBarrel',
+	LIBRARY_1: 'library1',
+	LIBRARY_2: 'library2',
+	CHEST: 'chest'
 };
-},{}],4:[function(require,module,exports){
+},{}],"/home/administrator/git/ultimacastlegen/src/MapGenerator.js":[function(require,module,exports){
 var CastleStructureGenerator = require('./CastleStructureGenerator');
 var RoomsGenerator = require('./RoomsGenerator');
 var RoomBuilder = require('./RoomBuilder');
@@ -336,7 +376,7 @@ MapGenerator.prototype = {
 }
 
 module.exports = MapGenerator;
-},{"./CastleStructureGenerator":2,"./RoomBuilder":6,"./RoomsGenerator":7,"./TerrainGenerator":8}],5:[function(require,module,exports){
+},{"./CastleStructureGenerator":"/home/administrator/git/ultimacastlegen/src/CastleStructureGenerator.js","./RoomBuilder":"/home/administrator/git/ultimacastlegen/src/RoomBuilder.js","./RoomsGenerator":"/home/administrator/git/ultimacastlegen/src/RoomsGenerator.js","./TerrainGenerator":"/home/administrator/git/ultimacastlegen/src/TerrainGenerator.js"}],"/home/administrator/git/ultimacastlegen/src/Random.js":[function(require,module,exports){
 module.exports = {
 	rand: function(low, hi){
 		return Math.floor(Math.random() * (hi - low + 1))+low;
@@ -348,7 +388,7 @@ module.exports = {
 		return this.rand(0,100) <= chance;
 	}
 }
-},{}],6:[function(require,module,exports){
+},{}],"/home/administrator/git/ultimacastlegen/src/RoomBuilder.js":[function(require,module,exports){
 var Random = require('./Random');
 var Arrays = require('./Arrays');
 var Cells = require('./Cells');
@@ -381,7 +421,27 @@ RoomBuilder.prototype = {
 			}
 		}
 	},
+	build_rooms: function(room){ // Foundations
+		for (var x = room.x; x < room.x + room.width; x++){
+			for (var y = room.y; y < room.y + room.height; y++){
+				if (x == room.x || x == room.x + room.width - 1 || y == room.y || y == room.y + room.height - 1){
+					this.map[x][y] = Cells.WALL;
+				} else {
+					this.map[x][y] = Random.chance(80) ? Cells.FLOOR : Cells.CHEST;
+				}
+			}
+		}
+	},
 	build_tower: function(room){
+		if (room.features.walls.north == 'exit')
+			room.northDoors = [{position: room.x + Math.floor(room.width/2), cell: Cells.DOOR}];
+		if (room.features.walls.south == 'exit')
+			room.southDoors = [{position: room.x + Math.floor(room.width/2), cell: Cells.DOOR}];
+		if (room.features.walls.east == 'exit')
+			room.eastDoors = [{position: room.y + Math.floor(room.height/2), cell: Cells.DOOR}];
+		if (room.features.walls.west == 'exit')
+			room.westDoors = [{position: room.y + Math.floor(room.height/2), cell: Cells.DOOR}];
+
 		for (var x = room.x; x < room.x + room.width; x++){
 			for (var y = room.y; y < room.y + room.height; y++){
 				var wall = false;
@@ -404,11 +464,7 @@ RoomBuilder.prototype = {
 						else
 							this.map[x][y] = Cells.WALL;
 					} else if (wall === 'exit'){	
-						if (x === room.x + Math.floor(room.width/2) ||
-							y === room.y + Math.floor(room.height/2) )
-							this.map[x][y] = Cells.DOOR;
-						else
-							this.map[x][y] = Cells.WALL;
+						this.map[x][y] = Cells.WALL;
 					} else if (wall === 'open'){
 						this.map[x][y] = Cells.FLOOR;
 					}
@@ -460,16 +516,6 @@ RoomBuilder.prototype = {
 		//TODO: Implement room.features.shape === 'cross'
 	},
 	build_courtyard: function(room){
-		/*
-			centralFeature: 'fountain', // 'fountain' / 'well'
-			additionalFountains: true, // only for 'fountain'
-			fountainSymmetry: 'x', // Only for 'fountain' with additionalFountains ['x', 'y', 'full'];
-			hasSmallLake: false // only for 'fountain'
-			connectionWithRooms: {
-				type: 'radial' // ['radial', 'around'],
-				terrain: 'floor'  // ['floor', 'dirt'])
-			},
-		*/
 		for (var x = room.x; x < room.x + room.width; x++){
 			for (var y = room.y; y < room.y + room.height; y++){
 				if (x == room.x || x == room.x + room.width - 1 || y == room.y || y == room.y + room.height - 1){
@@ -555,16 +601,6 @@ RoomBuilder.prototype = {
 		}
 	},
 	build_entranceHall: function(room){
-		/*
-		entranceStructure.hasFloor = Random.chance(50);
-		entranceStructure.hasCrossWindows = Random.chance(50);
-		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
-		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
-		entranceStructure.isMain = mainEntrance;
-		entranceStructure.width = this.castle.central.width - Random.rand(3, 6) * 2;
-		if (entranceStructure.width < 3)
-			entranceStructure.width = 3;
-		*/
 		var halfOpening = Math.floor((room.width - room.features.openingWidth) / 2);
 		var halfClosing = Math.floor((room.width - room.features.closingWidth) / 2);
 		for (var x = room.x; x < room.x + room.width; x++){
@@ -590,64 +626,484 @@ RoomBuilder.prototype = {
 		}
 	},
 	build_entrance: function(room){
-		/*
-		entranceStructure.hasFloor = Random.chance(50);
-		entranceStructure.hasCrossWindows = Random.chance(50);
-		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
-		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
-		entranceStructure.isMain = mainEntrance;
-		entranceStructure.width = this.castle.central.width - Random.rand(3, 6) * 2;
-		if (entranceStructure.width < 3)
-			entranceStructure.width = 3;
-		*/
 		for (var x = room.x; x < room.x + room.width; x++){
 			for (var y = room.y; y < room.y + room.height; y++){
 				this.map[x][y] = Cells.FLOOR;
 			}
 		}
 	},
-	placeDoors: function(room){
-		if (room.northDoors) for (var i = 0; i < room.northDoors.length; i++){
-			if (this.map[room.northDoors[i]][room.y-1] == Cells.WALL){
-				this.map[room.northDoors[i]][room.y-1] = Cells.FLOOR;
-				this.map[room.northDoors[i]][room.y] = Cells.FLOOR;
-			} else {
-				this.map[room.northDoors[i]][room.y] = Cells.DOOR;
+	build_throneRoom: function(room){
+		// Pad room
+		var modifiedWidth = false;
+		if (room.width % 2 == 0){
+			room.width--;
+			for (var y = room.y; y < room.y + room.height; y++){
+				this.map[room.x+room.width-1][y] = Cells.WALL;
+			}
+			modifiedWidth = true;
+		}
+		this.buildRoom(room);
+		var midx = room.x+Math.floor(room.width/2);
+		// Place throne
+		this.map[midx][room.y+1] = Cells.THRONE;
+		if (room.features.hasSecondaryThrone)
+			this.map[midx-1][room.y+1] = Cells.SMALL_TABLE;
+		if (room.features.hasMagicOrb)
+			this.map[midx+1][room.y+1] = Cells.ORB;
+		if (room.features.hasMagicCarpet)
+			this.map[midx][room.y+2] = Cells.MAGIC_CARPET;
+
+		var columnsPosition = Random.rand(2, Math.floor(room.width/2) - 2);
+		var columnsSpacing = Random.rand(2,3);
+		var torchesSpacing = Random.rand(2,3);
+		var placeColumns = room.features.linedWithColumns && room.width >= 9;
+		var placeTorches = room.features.linedWithTorches && room.width >= 9;
+		var placeSmallCarpet = true;
+		var placeBigCarpet = room.width >= 7;
+		var carpetStart = room.features.hasMagicCarpet ? room.y + 3 : room.y + 2;
+
+		for (var y = room.y+1; y < room.y + room.height - 1; y++){
+			// Place carpet
+			if (room.features.hasCarpet) if (y >= carpetStart){
+				if (placeSmallCarpet)
+					this.map[midx][y] = Cells.FLOOR_2;
+				if (placeBigCarpet){
+					this.map[midx-1][y] = Cells.FLOOR_2;
+					this.map[midx+1][y] = Cells.FLOOR_2;
+				}
+			}
+			// Place columns	
+			if (placeColumns) if (y % columnsSpacing == 0){
+				this.map[room.x+columnsPosition][y] = Cells.COLUMN;
+				this.map[room.x+room.width-columnsPosition-1][y] = Cells.COLUMN;
+			}
+			// Place torches
+			if (placeTorches) if ((y+1) % torchesSpacing == 0){
+				this.map[room.x+1][y] = Cells.L_TORCH;
+				this.map[room.x+room.width-2][y] = Cells.R_TORCH;
 			}
 		}
-		if (room.southDoors) for (var i = 0; i < room.southDoors.length; i++){
-			if (this.map[room.southDoors[i]][room.y+room.height] == Cells.WALL){
-				this.map[room.southDoors[i]][room.y+room.height] = Cells.FLOOR;
-				this.map[room.southDoors[i]][room.y+room.height-1] = Cells.FLOOR;
-			} else {
-				this.map[room.southDoors[i]][room.y+room.height-1] = Cells.DOOR;
+		// Place door
+		room.southDoors = [{position: midx, cell: Cells.DOOR}];
+		if (modifiedWidth){
+			room.width++;
+		}
+	},
+	build_livingQuarters: function(room){
+		this.buildLivingQuarters(room, 'simple');
+	},
+	build_guestRoom: function(room){
+		this.buildLivingQuarters(room, 'guestRoom');
+	},
+	build_lordQuarters: function(room){
+		this.buildLivingQuarters(room, 'lord');
+	},
+	buildLivingQuarters: function(room, quartersType){
+		this.buildRoom(room);
+		var leftSize = room.width >= 6 ? 3 : 2;
+		var rightSize = room.width >= 8 ? room.width > 8 ? 3 : 2 : 0;
+		var topSize = room.height >= 6 ? 3 : 2;
+		var bottomSize = room.height >= 8 ? room.height > 8 ? 3 : 2 : 0;
+
+		if (Random.chance(50)){
+			// Flip sides
+			var temp = rightSize;
+			rightSize = leftSize;
+			leftSize = temp;
+		} 
+		room.placedElements = {};
+		// Place furniture
+		for (var y = room.y+1; y < room.y + room.height - 1; y++){
+			if (leftSize){
+				var mainBlock = this.selectLivingQuartersBlock(room, y, quartersType);
+				if (mainBlock) 
+					this.placeBlock(mainBlock, room.x+1, y, leftSize, false, quartersType);
+			}
+			if (rightSize){
+				var mainBlock = this.selectLivingQuartersBlock(room, y, quartersType);
+				if (mainBlock) 
+					this.placeBlock(mainBlock, room.x+room.width-rightSize-1, y, rightSize, true, quartersType);
+			}
+		}
+		for (var x = room.x+3; x < room.x + room.width - 3; x++){
+			if (topSize){
+				var mainBlock = this.selectLivingQuartersVBlock(room, quartersType);
+				if (mainBlock) 
+					this.placeVBlock(mainBlock, x, room.y+1, topSize, false, quartersType);
+			}
+			if (bottomSize){
+				var mainBlock = this.selectLivingQuartersVBlock(room, quartersType);
+				if (mainBlock) 
+					this.placeVBlock(mainBlock, x, room.y+room.height-bottomSize-1, bottomSize, true, quartersType);
 			}
 		}
 
-		if (room.westDoors) for (var i = 0; i < room.westDoors.length; i++){
-			if (this.map[room.x-1][room.westDoors[i]] == Cells.WALL){
-				this.map[room.x-1][room.westDoors[i]] = Cells.FLOOR;
-				this.map[room.x][room.westDoors[i]] = Cells.FLOOR;
-			} else {
-				this.map[room.x][room.westDoors[i]] = Cells.DOOR;
+		if (quartersType === 'lord' || quartersType === 'guestRoom'){
+			// Place bed(s) for royal and guest quarters
+			var numberOfBeds = quartersType === 'guestRoom' ? 2 : 1;
+			for (var i = 0; i < numberOfBeds; i++){
+				var y = Random.rand(room.y+1, room.y + room.height - 2 - (quartersType === 'lord' ? 1 : 0));
+				if (leftSize){
+					this.placeBlock('bed', room.x+1, y, leftSize, false, quartersType);
+				} else if (rightSize){
+					this.placeBlock('bed', room.x+room.width-rightSize-1, y, rightSize, true, quartersType);
+				}
 			}
+			this.addWallFireplace(room);
+		}
+		this.addTorchesToRoom(room);
+		
+	},
+	selectLivingQuartersBlock: function(room, y, quartersType){
+		// Beds?
+		if (quartersType === 'simple' && ((y%2 == 0 && Random.chance(70)) || (y%2 != 0 && Random.chance(30)))){
+			return 'bed';
+		}
+		// Nothing?
+		if (Random.chance(20)){
+			return false;
+		}
+		// Table with chair
+		if (!room.placedElements["tableAndChair"] && (quartersType === 'lord' || quartersType === 'guestRoom') && Random.chance(40)){
+			room.placedElements["tableAndChair"] = true;
+			return 'tableAndChair'
+		}
+		// Kitchen Table
+		if (!room.placedElements["diningTable"] && quartersType === 'kitchen' && y > room.y+1 && y < room.y+room.height - 2 && Random.chance(40)){
+			room.placedElements["diningTable"] = true;
+			return 'diningTable'
+		}
+		var additionalElements = false;
+		switch (quartersType){
+			case 'simple':
+				additionalElements = [Cells.BARREL, Cells.LOCKER, Cells.PLANT, Cells.SMALL_TABLE];
+				break;
+			case 'guestRoom':
+				additionalElements = [Cells.BARREL, Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
+				break;
+			case 'lord':
+				additionalElements = [Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
+				break;
+			case 'kitchen':
+				additionalElements = [Cells.WINE_BARREL, Cells.OVEN,  Cells.BARREL, Cells.GRILL, 'tableAndChair'];
+				break;
+			case 'library':
+				additionalElements = ['bookshelf', 'tableAndChair', Cells.PLANT, Cells.SHELF_2];
+				break;
+			case 'hall':
+				additionalElements = [Cells.PLANT, Cells.FOUNTAIN];
+
+		}
+		var element = Random.randomElementOf(additionalElements);
+		room.placedElements[element] = true;
+		return element;
+	},
+	selectLivingQuartersVBlock: function(room, quartersType){
+		if (!room.placedElements["tableAndPiano"] && quartersType === 'lord' && Random.chance(40)){
+			room.placedElements["tableAndPiano"] = true;
+			return 'tableAndPiano'
+		}
+		if (Random.chance(60)){
+			return false;
+		}
+		var additionalElements = false;
+		switch (quartersType){
+			case 'simple':
+				additionalElements = [Cells.BARREL, Cells.LOCKER, Cells.PLANT, Cells.SMALL_TABLE];
+				break;
+			case 'guestRoom':
+				additionalElements = [Cells.BARREL, Cells.SHELF, Cells.SHELF_2, Cells.PLANT, Cells.JAR_TABLE];
+				if (!room.placedElements[Cells.MIRROR])
+					additionalElements.push(Cells.MIRROR);
+				break;
+			case 'lord':
+				additionalElements = [Cells.SHELF, Cells.SHELF_2,  Cells.PLANT, Cells.JAR_TABLE];
+				if (!room.placedElements[Cells.MIRROR])
+					additionalElements.push(Cells.MIRROR);
+				if (!room.placedElements[Cells.CLOCK])
+					additionalElements.push(Cells.CLOCK);
+				break;
+			case 'kitchen':
+				additionalElements = [Cells.WINE_BARREL, Cells.OVEN,  Cells.BARREL, Cells.GRILL];
+				break;
+			case 'library':
+				additionalElements = [Cells.PLANT, Cells.SHELF_2];
+				if (!room.placedElements[Cells.CLOCK])
+					additionalElements.push(Cells.CLOCK);
+				break;
+
+		}
+		var element = Random.randomElementOf(additionalElements);
+		room.placedElements[element] = true;
+		return element;
+	},
+	placeVBlock: function(type, x,y,size, flip, quartersType){
+		switch (type){
+		case 'tableAndChair':
+			if (!flip){
+				this.map[x][y] = Cells.SMALL_TABLE;
+				this.map[x][y+1] = Cells.N_CHAIR;
+			} else {
+				this.map[x][y+size-1] = Cells.SMALL_TABLE;
+				this.map[x][y+size-2] = Cells.S_CHAIR;
+			}
+			break;
+		case 'tableAndPiano':
+			if (!flip){
+				this.map[x][y] = Cells.S_PIANO;
+				this.map[x][y+1] = Cells.N_CHAIR;
+			} else {
+				this.map[x][y+size-1] = Cells.PIANO;
+				this.map[x][y+size-2] = Cells.S_CHAIR;
+			}
+			break;
+		default:
+			var y = flip ? y+size-1 : y;
+			this.map[x][y] = type;
+			break;
+		}
+	},
+	placeBlock: function(type, x,y,size, flip, quartersType){
+		switch (type){
+		case 'bed':
+			if (!flip){
+				this.map[x][y] = Cells.BED_1;
+				this.map[x+1][y] = Cells.BED_2;
+				if (size > 2 && quartersType === 'simple'){
+					this.map[x+2][y] = Random.chance(70) ? Cells.LOCKER : Cells.SMALL_TABLE;	
+				}
+			} else {
+				if (size > 2){
+					this.map[x+1][y] = Cells.BED_1;
+					this.map[x+2][y] = Cells.BED_2;
+					if (quartersType === 'simple')
+						this.map[x][y] = Random.chance(70) ? Cells.LOCKER : Cells.SMALL_TABLE;	
+				} else {
+					this.map[x][y] = Cells.BED_1;
+					this.map[x+1][y] = Cells.BED_2;
+				}
+			}
+			break;
+		case 'tableAndChair':
+			if (!flip){
+				this.map[x][y] = Cells.SMALL_TABLE;
+				this.map[x+1][y] = Cells.L_CHAIR;
+			} else {
+				this.map[x+size-1][y] = Cells.SMALL_TABLE;
+				this.map[x+size-2][y] = Cells.R_CHAIR;
+			}
+			break;
+		case 'tableAndPiano':
+			var x = flip ? x+size-1 : x;
+			if (this.map[x][y-1] !== Cells.BED_2 && this.map[x][y-1] !== Cells.BED_2){
+				this.map[x][y-1] = Cells.S_CHAIR;
+				this.map[x][y] = Cells.PIANO;
+			}
+			break;
+		case 'diningTable':
+			if (size == 1){
+				this.map[x][y] = Cells.SMALL_TABLE;
+			} else {
+				this.map[x][y] = Cells.L_TABLE;
+				this.map[x+size-1][y] = Cells.R_TABLE;
+				for (var i = 0; i < size-2; i++){
+					switch (Random.rand(0,3)){
+						case 0: this.map[x+1+i][y] = Cells.C_TABLE_1; break;
+						case 1: this.map[x+1+i][y] = Cells.C_TABLE_2; break;
+						case 2: this.map[x+1+i][y] = Cells.C_TABLE_3; break;
+						case 3: this.map[x+1+i][y] = Cells.C_TABLE_4; break;
+					}
+				}
+			}
+			break;
+		case 'bookshelf':
+			if (flip){
+				this.map[x+size-2][y] = Cells.LIBRARY_1;
+				this.map[x+size-1][y] = Cells.LIBRARY_2;	
+			} else {
+				this.map[x][y] = Cells.LIBRARY_1;
+				this.map[x+1][y] = Cells.LIBRARY_2;	
+			}
+			break;
+		case 'upChairs':
+			if (size === 1){
+				this.map[x][y] = Cells.N_CHAIR;
+			} else for (var i = x; i < x+size-1; i++){
+				if (Random.chance(80)) this.map[i][y] = Cells.N_CHAIR;
+			}
+		break;
+		case 'downChairs':
+			if (size === 1){
+				this.map[x][y] = Cells.S_CHAIR;
+			} else for (var i = x+1; i < x+size; i++){
+				if (Random.chance(80)) this.map[i][y] = Cells.S_CHAIR;
+			}
+		break;
+		default:
+			var x = flip ? x+size-1 : x;
+			this.map[x][y] = type;
+			break;
+		}
+	},
+	placeDoors: function(room){
+		if (room.northDoors) for (var i = 0; i < room.northDoors.length; i++){
+			var door = room.northDoors[i];
+			if (door.cell === Cells.DOOR){
+				this.tryClear(door.position,room.y-1)
+				this.tryClear(door.position,room.y+1)
+			}
+			if (this.map[door.position][room.y] === Cells.WALL)
+				this.map[door.position][room.y] = door.cell;
+		}
+		if (room.southDoors) for (var i = 0; i < room.southDoors.length; i++){
+			var door = room.southDoors[i];
+			if (door.cell === Cells.DOOR){
+				this.tryClear(door.position,room.y+room.height);
+				this.tryClear(door.position,room.y+room.height-2);
+			}
+			if (this.map[door.position][room.y+room.height-1] === Cells.WALL)
+				this.map[door.position][room.y+room.height-1] = door.cell;
+		}
+		if (room.westDoors) for (var i = 0; i < room.westDoors.length; i++){
+			var door = room.westDoors[i];
+			if (door.cell === Cells.DOOR){
+				this.tryClear(room.x-1,door.position);
+				this.tryClear(room.x+1,door.position);
+			}
+			if (this.map[room.x][door.position] === Cells.WALL)
+				this.map[room.x][door.position] = door.cell;
 		}
 
 		if (room.eastDoors) for (var i = 0; i < room.eastDoors.length; i++){
-			if (this.map[room.x+room.width][room.eastDoors[i]] == Cells.WALL){
-				this.map[room.x+room.width][room.eastDoors[i]] = Cells.FLOOR;
-				this.map[room.x+room.width-1][room.eastDoors[i]] = Cells.FLOOR;
-			} else {
-				this.map[room.x+room.width-1][room.eastDoors[i]] = Cells.DOOR;
+			var door = room.eastDoors[i];
+			if (door.cell === Cells.DOOR){
+				this.tryClear(room.x+room.width,door.position);
+				this.tryClear(room.x+room.width-2,door.position);
+			}
+			if (this.map[room.x+room.width-1][door.position] === Cells.WALL)
+				this.map[room.x+room.width-1][door.position] = door.cell;
+		}
+	},
+	tryClear: function(x,y){
+		if (!this.isFloor(x,y)){
+			if (this.map[x][y] === Cells.BED_2)
+				this.map[x-1][y] = Cells.FLOOR;
+			if (this.map[x][y] === Cells.BED_1)
+				this.map[x+1][y] = Cells.FLOOR;
+			if (this.map[x][y] === Cells.LIBRARY_2)
+				this.map[x-1][y] = Cells.FLOOR;
+			if (this.map[x][y] === Cells.LIBRARY_1)
+				this.map[x+1][y] = Cells.FLOOR;	
+			if (this.map[x][y] === Cells.R_TABLE){
+				if (this.map[x-1][y] === Cells.L_TABLE){
+					this.map[x-1][y] = Cells.SMALL_TABLE;
+				} else {
+					this.map[x-1][y] = Cells.R_TABLE;
+				}
+			} else if (this.map[x][y] === Cells.L_TABLE){
+				if (this.map[x+1][y] === Cells.R_TABLE){
+					this.map[x+1][y] = Cells.SMALL_TABLE;
+				} else {
+					this.map[x+1][y] = Cells.L_TABLE;
+				}
+			}
+			this.map[x][y] = Cells.FLOOR;
+		}
+	},
+	isFloor: function(x,y){
+		return this.map[x][y] === Cells.FLOOR || 
+			this.map[x][y] === Cells.FLOOR_2 || 
+			this.map[x][y] === Cells.DIRT ||
+			this.map[x][y] === Cells.GRASS_1 ||
+			this.map[x][y] === Cells.GRASS_2; 
+	},
+	isMultiTile: function(x,y){
+		return this.map[x][y] === Cells.L_TABLE || 
+			this.map[x][y] === Cells.R_TABLE || 
+			this.map[x][y] === Cells.C_TABLE_1 || 
+			this.map[x][y] === Cells.C_TABLE_2 || 
+			this.map[x][y] === Cells.C_TABLE_3 || 
+			this.map[x][y] === Cells.C_TABLE_4 || 
+			this.map[x][y] === Cells.LIBRARY_1 || 
+			this.map[x][y] === Cells.LIBRARY_2 ||
+			this.map[x][y] === Cells.BED_1 ||
+			this.map[x][y] === Cells.BED_2; 
+	},
+	build_diningRoom: function(room){
+		var tableLength = room.width - 3;
+		this.buildRoom(room);
+		var leftSize = Random.chance(50);
+		room.placedElements = {};
+		var location = Random.rand(room.x+1, room.x+room.width-tableLength-1);
+		for (var y = room.y+1; y < room.y + room.height - 1; y++){
+			var phase = (y-room.y)%3;
+			if (phase == 1){
+				if ((room.y+room.height)-y<4)
+					break;
+				location = Random.rand(room.x+1, room.x+room.width-tableLength-1);
+			}
+			// Place tables and chairs
+			switch(phase){
+				case 0:
+					this.placeBlock('upChairs', location, y, tableLength, false, 'diningRoom');
+					break;
+				case 1:
+					this.placeBlock('downChairs', location, y, tableLength, false, 'diningRoom');
+					break;
+				case 2:
+					this.placeBlock('diningTable', location, y, tableLength, false, 'diningRoom');
+					break;
 			}
 		}
+		this.addWallFireplace(room);
+		this.addTorchesToRoom(room);
+	},
+	addTorchesToRoom: function(room){
+		for (var y = room.y+1; y < room.y + room.height - 1; y++){
+			if (Random.chance(30) && !this.isMultiTile(room.x+1, y)){
+				this.map[room.x+1][y] = Cells.L_TORCH;
+				y++;
+			}
+		}
+		for (var y = room.y+1; y < room.y + room.height - 1; y++){
+			if (Random.chance(30) && !this.isMultiTile(room.x+room.width-2, y)){
+				this.map[room.x+room.width-2][y] = Cells.R_TORCH;
+				y++;
+			}
+		}
+	},
+	addWallFireplace: function(room){
+		var wall = room.northDoors;
+		if (!wall) {
+			wall = [];
+			room.northDoors = wall;
+		}
+		wall.push({cell: Cells.WALL_FIREPLACE, position: Random.rand(room.x+1, room.x+room.width - 2)});
+	},
+	build_kitchen: function(room){
+		this.buildLivingQuarters(room, 'kitchen');
+	},
+	build_library: function(room){
+		this.buildLivingQuarters(room, 'library');
+	},
+	build_throneHall: function(room){
+		this.build_hall(room);
+	},
+	build_halls: function(room){ // Wall halls}
+		this.buildRoom(room);
+		if (room.width > 3)
+			this.addTorchesToRoom(room);
+	},
+	build_hall: function(room){
+		this.buildLivingQuarters(room, 'hall');
 	}
 }
 
 module.exports = RoomBuilder;
-},{"./Arrays":1,"./Cells":3,"./Random":5}],7:[function(require,module,exports){
+},{"./Arrays":"/home/administrator/git/ultimacastlegen/src/Arrays.js","./Cells":"/home/administrator/git/ultimacastlegen/src/Cells.js","./Random":"/home/administrator/git/ultimacastlegen/src/Random.js"}],"/home/administrator/git/ultimacastlegen/src/RoomsGenerator.js":[function(require,module,exports){
 var Random = require('./Random');
 var Arrays = require('./Arrays');
+var Cells = require('./Cells');
 
 function RoomsGenerator(){};
 
@@ -703,7 +1159,7 @@ RoomsGenerator.prototype = {
 			this.generationParams.width -  2 * x - 1,
 			yEnd - y + 1,
 			{},
-			-1
+			-2
 		);
 	},
 
@@ -718,7 +1174,7 @@ RoomsGenerator.prototype = {
 				south: def.verticalConnections ? 'exit' : 'solid',
 				east: def.horizontalConnections === 'both' || def.horizontalConnections === 'top' ? 'exit' : 'solid'
 			}
-		}, 1);
+		}, -1);
 		//NE
 		this.addRoom(this.generationParams.width - def.size - 2, 1,'tower', 'Northeast Tower', def.size, def.size, {
 			shape: def.circle ? 'circle' : 'square',
@@ -728,7 +1184,7 @@ RoomsGenerator.prototype = {
 				south: def.verticalConnections ? 'exit' : 'solid',
 				west: def.horizontalConnections === 'both' || def.horizontalConnections === 'top' ? 'exit' : 'solid'
 			}
-		}, 1);
+		}, -1);
 		//SW
 		this.addRoom(1, this.generationParams.height - def.size - 2,'tower', 'Southwest Tower', def.size, def.size, {
 			shape: def.circle ? 'circle' : 'square',
@@ -738,7 +1194,7 @@ RoomsGenerator.prototype = {
 				north: def.verticalConnections ? 'exit' : 'solid',
 				east: def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom' ? 'exit' : 'solid'
 			}
-		}, 1);
+		}, -1);
 		//SE
 		this.addRoom(this.generationParams.width - def.size - 2, this.generationParams.height - def.size - 2,'tower', 'Southeast Tower', def.size, def.size, {
 			shape: def.circle ? 'circle' : 'square',
@@ -748,7 +1204,7 @@ RoomsGenerator.prototype = {
 				north: def.verticalConnections ? 'exit' : 'solid',
 				west: def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom' ? 'exit' : 'solid'
 			}
-		}, 1);
+		}, -1);
 		var connectionWidth = def.connectionCorridors.type === 'corridor' ? 3 : def.connectionCorridors.hallWidth;
 		if (def.verticalConnections){
 			// West corridor
@@ -896,15 +1352,6 @@ RoomsGenerator.prototype = {
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom'){
 			yEnd = this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2) - adjustment;
 		}
-		/*this.addRoom(
-			x,
-			y,
-			'rooms',
-			'',
-			//Math.floor(this.generationParams.width / 2) - x,
-			this.generationParams.width -  2 * x - 1,
-			yEnd - y + 1
-		);*/
 		var area = {
 			x: x,
 			y: y,
@@ -912,7 +1359,7 @@ RoomsGenerator.prototype = {
 			h: yEnd - y + 1
 		};
 		// Brute force! Let's try a lot of times to fit the rooms in the space we have!
-		var roomsToPlace = Math.ceil(this.structure.rooms.length / 2) + 1;
+		var roomsToPlace = Math.ceil(this.structure.rooms.length / 2);
 		this.roomsArea = area;
 		var minHeight = 5;
 		var maxHeight = 7;
@@ -921,6 +1368,13 @@ RoomsGenerator.prototype = {
 		var addedRooms = [];
 		var placedRooms = 0;
 		var reduceRoomsToPlace = 100;
+		// Place room connecting with courtyard
+		addedRooms.push({
+			x: this.centerRoom.x - 4,
+			y: this.centerRoom.y + Math.floor(this.centerRoom.height/2) - 2,
+			w: 5,
+			h: 5
+		});
 		out: for (var i = 0; i < 500; i++){
 			for (var j = 0; j < 500; j++){
 				var room = {
@@ -1005,7 +1459,63 @@ RoomsGenerator.prototype = {
 				});
 			}
 		}
+
+		// Now let's fill the spaces and make these rooms grow again
+		area.w = this.generationParams.width - 2 * x - 1;
+		while(true){
+			var noHoles = true;
+			hole: for (var x = area.x; x <= area.x + area.w - 2; x++){
+				for (var y = area.y; y <= area.y + area.h - 2; y++){
+					// Is there a hole here? is it big enough?
+					if (this.holeAt(addedRooms, x,y)){
+						noHoles = false;
+						// Lets plot a room and make it grow
+						var fillRoom = {
+							x: x,
+							y: y,
+							w: 5,
+							h: 5
+						};
+						console.log("Placing a fill room", fillRoom);
+						addedRooms.push(fillRoom);
+						while(true){
+							var grew = false;
+							//Select a random direction first, if it can't grow in that direction, check in order
+							var randomDirection = Random.rand(0,3);
+							if (this.roomCanGrow(fillRoom, addedRooms, randomDirection)){
+								this.growRoom(fillRoom, randomDirection);
+								grew = true;
+							} else {
+								for (var j = 0; j <= 3; j++){
+									if (this.roomCanGrow(fillRoom, addedRooms, j)){
+										this.growRoom(fillRoom, j);
+										grew = true;
+										break;
+									}
+								}
+							}
+							if (!grew){
+								break;
+							}
+						}
+						break hole;
+					}
+				}
+			}
+			if (noHoles)
+				break;
+		}
 		return addedRooms;
+	},
+	holeAt: function(rooms, x,y){
+		for (var dx = 0; dx < 5; dx++){
+			for (var dy = 0; dy < 5; dy++){
+				if (!this.emptySpace(x+dx, y+dy, rooms)){
+					return false;
+				}
+			}
+		}
+		return true;
 	},
 	assignRooms: function(rooms, force){
 		/** We now have a lot of empty rooms, give a function to each based on the super structure
@@ -1115,14 +1625,15 @@ RoomsGenerator.prototype = {
 			Arrays.removeObject(bigAvailableRooms, room); 
 			Arrays.removeObject(otherAvailableRooms, room);
 			if (room){
-				this.addRoom(room.x, room.y, requiredRoom.type, requiredRoom.type, room.w, room.h, {}, requiredRoom.level, true);
+				var linkeable = requiredRoom.linkeable != undefined ?  requiredRoom.linkeable : true;
+				this.addRoom(room.x, room.y, requiredRoom.type, requiredRoom.type, room.w, room.h, requiredRoom, requiredRoom.level, linkeable);
 				// Place south rooms
 				if (requiredRoom.southRoom){
 					var southRoom = this.getRoomAt(rooms, room.x + Math.floor(room.w/2), room.y + room.h+2);
 					if (!southRoom){
 						// There's probably a hall, or the central feature which is fine.
 					} else {
-						this.addRoom(southRoom.x, southRoom.y, requiredRoom.southRoom, requiredRoom.southRoom, southRoom.w, southRoom.h, {}, requiredRoom.level, true);
+						this.addRoom(southRoom.x, southRoom.y, requiredRoom.southRoom, requiredRoom.southRoom, southRoom.w, southRoom.h, requiredRoom, requiredRoom.level, true);
 						Arrays.removeObject(bigAvailableRooms, southRoom); // Available space used
 						Arrays.removeObject(otherAvailableRooms, southRoom); // Available space used
 					}
@@ -1132,11 +1643,11 @@ RoomsGenerator.prototype = {
 			}
 		}
 
-		// Fill unused rooms with halls (?)
+		// Fill unused rooms with living quarters
 		var remainingRooms = northBigAvailableRooms.concat(northAvailableRooms).concat(bigAvailableRooms).concat(otherAvailableRooms);
 		for (var i = 0; i < remainingRooms.length; i++){
 			var availableRoom = remainingRooms[i];
-			this.addRoom(availableRoom.x, availableRoom.y, 'hall*', 'hall*', availableRoom.w, availableRoom.h, {}, 0, true);
+			this.addRoom(availableRoom.x, availableRoom.y, 'livingQuarters', 'livingQuarters*', availableRoom.w, availableRoom.h, availableRoom, 0, true);
 		}
 		return true;
 	},
@@ -1236,6 +1747,36 @@ RoomsGenerator.prototype = {
 		}
 		return true;
 	},
+	emptySpace: function(x, y, tempRooms){
+		// Must be inside the rooms area
+		if (x >= this.roomsArea.x && x <= this.roomsArea.x + this.roomsArea.w &&
+			y >= this.roomsArea.y && y <= this.roomsArea.y + this.roomsArea.h) {
+			// Ok...
+		} else {
+			return false;
+		}
+
+		// Must not collide with other rooms (except the towers)
+		for (var i = 0; i < this.rooms.length; i++){
+			var existingRoom = this.rooms[i];
+			if (existingRoom.type === 'tower' || existingRoom.type === 'rooms'){
+				continue;
+			}
+			if (existingRoom.x < x && existingRoom.x + existingRoom.width - 1 > x &&
+    			existingRoom.y < y && existingRoom.y + existingRoom.height - 1 > y) {
+				return false;
+			}
+		}
+		// Must not collide with other temp rooms
+		for (var i = 0; i < tempRooms.length; i++){
+			var existingRoom = tempRooms[i];
+			if (existingRoom.x < x && existingRoom.x + existingRoom.w - 1 > x &&
+    			existingRoom.y < y && existingRoom.y + existingRoom.h - 1 > y) {
+				return false;
+			}
+		}
+		return true;
+	},
 	addRoom: function(x, y, type, name, width, height, features, level, linkeable){
 		var room = {
 			x: x,
@@ -1260,7 +1801,7 @@ RoomsGenerator.prototype = {
 			if (!this.centerRoom.westDoors){
 				this.centerRoom.westDoors = [];
 			}
-			this.centerRoom.westDoors.push(this.centerRoom.y + Math.floor(this.centerRoom.height/2));
+			this.centerRoom.westDoors.push({position: this.centerRoom.y + Math.floor(this.centerRoom.height/2), cell: Cells.DOOR});
 		}
 
 		// Go wessos
@@ -1269,7 +1810,7 @@ RoomsGenerator.prototype = {
 			this.linkRoom(eastRoom);
 			if (!this.centerRoom.eastDoors)
 				this.centerRoom.eastDoors = [];
-			this.centerRoom.eastDoors.push(this.centerRoom.y + Math.floor(this.centerRoom.height/2));
+			this.centerRoom.eastDoors.push({position: this.centerRoom.y + Math.floor(this.centerRoom.height/2), cell: Cells.DOOR});
 		}
 		
 
@@ -1289,7 +1830,7 @@ RoomsGenerator.prototype = {
 			var x = Random.rand(segment.start, segment.end);
 			if (!room.northDoors)
 				room.northDoors = [];
-			room.northDoors.push(x);
+			room.northDoors.push({position: x, cell: Cells.DOOR});
 			this.linkRoom(segment.room);
 		}
 
@@ -1299,7 +1840,7 @@ RoomsGenerator.prototype = {
 			var x = Random.rand(segment.start, segment.end);
 			if (!room.southDoors)
 				room.southDoors = [];
-			room.southDoors.push(x);
+			room.southDoors.push({position: x, cell: Cells.DOOR});
 			this.linkRoom(segment.room);
 		}
 
@@ -1308,7 +1849,7 @@ RoomsGenerator.prototype = {
 			var x = Random.rand(segment.start, segment.end);
 			if (!room.westDoors)
 				room.westDoors = [];
-			room.westDoors.push(x);
+			room.westDoors.push({position: x, cell: Cells.DOOR});
 			this.linkRoom(segment.room);
 		}
 
@@ -1317,7 +1858,7 @@ RoomsGenerator.prototype = {
 			var x = Random.rand(segment.start, segment.end);
 			if (!room.eastDoors)
 				room.eastDoors = [];
-			room.eastDoors.push(x);
+			room.eastDoors.push({position: x, cell: Cells.DOOR});
 			this.linkRoom(segment.room);
 		}
 	},
@@ -1341,13 +1882,13 @@ RoomsGenerator.prototype = {
 				nearRoom = this.getRealRoomAt(x, room.y - 1, room);
 				break;
 			case 'south':
-				nearRoom = this.getRealRoomAt(x, room.y + room.height+2, room);
+				nearRoom = this.getRealRoomAt(x, room.y + room.height+1, room);
 				break;
 			case 'west':
 				nearRoom = this.getRealRoomAt(room.x - 1, x, room);
 				break;
 			case 'east':
-				nearRoom = this.getRealRoomAt(room.x + room.width +2, x, room);
+				nearRoom = this.getRealRoomAt(room.x + room.width +1, x, room);
 				break;
 			}
 
@@ -1356,7 +1897,7 @@ RoomsGenerator.prototype = {
 					if (!nearRoom.linkeable)
 						continue;
 					currentSegment = {
-						start: x,
+						start: x + 1,
 						room: nearRoom
 					}
 					segments.push(currentSegment);
@@ -1385,7 +1926,7 @@ RoomsGenerator.prototype = {
 			}
 		}
 		if (currentSegment && !currentSegment.end){
-			currentSegment.end = end;
+			currentSegment.end = end - 1;
 		}
 		// room.segments = segments;
 		return segments;
@@ -1393,7 +1934,7 @@ RoomsGenerator.prototype = {
 }
 
 module.exports = RoomsGenerator;
-},{"./Arrays":1,"./Random":5}],8:[function(require,module,exports){
+},{"./Arrays":"/home/administrator/git/ultimacastlegen/src/Arrays.js","./Cells":"/home/administrator/git/ultimacastlegen/src/Cells.js","./Random":"/home/administrator/git/ultimacastlegen/src/Random.js"}],"/home/administrator/git/ultimacastlegen/src/TerrainGenerator.js":[function(require,module,exports){
 var Random = require('./Random');
 var Cells = require('./Cells');
 
@@ -1420,11 +1961,19 @@ TerrainGenerator.prototype = {
 }
 
 module.exports = TerrainGenerator;
-},{"./Cells":3,"./Random":5}],9:[function(require,module,exports){
+},{"./Cells":"/home/administrator/git/ultimacastlegen/src/Cells.js","./Random":"/home/administrator/git/ultimacastlegen/src/Random.js"}],"/home/administrator/git/ultimacastlegen/src/ui/CanvasRenderer.js":[function(require,module,exports){
 var Cells = require('../Cells');
+
+
 
 function CanvasRenderer(config){
 	this.config = config;
+	this.tiles = {};
+	for (key in Cells){
+		var val = Cells[key];
+		this.tiles[val] = new Image();
+		this.tiles[val].src = 'img/'+val+'.png';
+	}
 }
 
 CanvasRenderer.prototype = {
@@ -1476,49 +2025,20 @@ CanvasRenderer.prototype = {
 	drawLevelWithIcons: function(cells, canvas){
 		var canvas = document.getElementById(canvas);
 		var context = canvas.getContext('2d');
-		context.font="12px Georgia";
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		var zoom = 8;
-		var tiles = {};
-		tiles[Cells.FLOOR] = new Image();
-		tiles[Cells.FLOOR_2] = new Image();
-		tiles[Cells.WALL] = new Image();
-		tiles[Cells.GRASS_1] = new Image();
-		tiles[Cells.GRASS_2] = new Image();
-		tiles[Cells.DOOR] = new Image();
-		tiles[Cells.TREE] = new Image();
-		tiles[Cells.CROSS_WINDOW] = new Image();
-		tiles[Cells.FOUNTAIN] = new Image();
-		tiles[Cells.WELL] = new Image();
-		tiles[Cells.DIRT] = new Image();
-		tiles[Cells.WATER] = new Image();
-		tiles[Cells.FIREPLACE] = new Image();
-		tiles[Cells.FLOOR].src = 'img/floor.png';
-		tiles[Cells.FLOOR_2].src = 'img/floor2.png';
-		tiles[Cells.WALL].src = 'img/wall.png';
-		tiles[Cells.GRASS_1].src = 'img/grass1.png';
-		tiles[Cells.GRASS_2].src = 'img/grass2.png';
-		tiles[Cells.DOOR].src = 'img/door.png';
-		tiles[Cells.TREE].src = 'img/tree.png';
-		tiles[Cells.CROSS_WINDOW].src = 'img/crossWindow.png';
-		tiles[Cells.FOUNTAIN].src = 'img/fountain.png';
-		tiles[Cells.WELL].src = 'img/well.png';
-		tiles[Cells.DIRT].src = 'img/dirt.png';
-		tiles[Cells.WATER].src = 'img/water.png';
-		tiles[Cells.FIREPLACE].src = 'img/fireplace.png';
-
 		for (var x = 0; x < this.config.LEVEL_WIDTH; x++){
 			for (var y = 0; y < this.config.LEVEL_HEIGHT; y++){
 				var cell = cells[x][y]; 
 				if (cell)
-					context.drawImage(tiles[cell], x * 16, y * 16);
+					context.drawImage(this.tiles[cell], x * 14, y * 16);
 			}
 		}
 	}
 }
 
 module.exports = CanvasRenderer;
-},{"../Cells":3}],10:[function(require,module,exports){
+},{"../Cells":"/home/administrator/git/ultimacastlegen/src/Cells.js"}],"/home/administrator/git/ultimacastlegen/src/ui/WebAdapter.js":[function(require,module,exports){
 window.MapGenerator = require('../MapGenerator');
 window.CanvasRenderer = require('./CanvasRenderer');
-},{"../MapGenerator":4,"./CanvasRenderer":9}]},{},[10]);
+},{"../MapGenerator":"/home/administrator/git/ultimacastlegen/src/MapGenerator.js","./CanvasRenderer":"/home/administrator/git/ultimacastlegen/src/ui/CanvasRenderer.js"}]},{},["/home/administrator/git/ultimacastlegen/src/ui/WebAdapter.js"]);

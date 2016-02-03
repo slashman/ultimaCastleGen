@@ -378,6 +378,7 @@ RoomBuilder.prototype = {
 				}
 			}
 		}
+		this.addTorchesToRoom(room);
 		//TODO: Place Fireplaces
 	},
 	selectLivingQuartersBlock: function(room, y, quartersType){
@@ -593,12 +594,21 @@ RoomBuilder.prototype = {
 			this.map[x][y] === Cells.GRASS_1 ||
 			this.map[x][y] === Cells.GRASS_2; 
 	},
+	isMultiTile: function(x,y){
+		return this.map[x][y] === Cells.L_TABLE || 
+			this.map[x][y] === Cells.R_TABLE || 
+			this.map[x][y] === Cells.C_TABLE_1 || 
+			this.map[x][y] === Cells.C_TABLE_2 || 
+			this.map[x][y] === Cells.C_TABLE_3 || 
+			this.map[x][y] === Cells.C_TABLE_4 || 
+			this.map[x][y] === Cells.BED_1 ||
+			this.map[x][y] === Cells.BED_2; 
+	},
 	build_diningRoom: function(room){
 		var tableLength = room.width - 3;
 		this.buildRoom(room);
 		var leftSize = Random.chance(50);
 		room.placedElements = {};
-		// Place tables and chairs
 		var location = Random.rand(room.x+1, room.x+room.width-tableLength-1);
 		for (var y = room.y+1; y < room.y + room.height - 1; y++){
 			var phase = (y-room.y)%3;
@@ -607,6 +617,7 @@ RoomBuilder.prototype = {
 					break;
 				location = Random.rand(room.x+1, room.x+room.width-tableLength-1);
 			}
+			// Place tables and chairs
 			switch(phase){
 				case 0:
 					this.placeBlock('upChairs', location, y, tableLength, false, 'diningRoom');
@@ -618,7 +629,21 @@ RoomBuilder.prototype = {
 					this.placeBlock('diningTable', location, y, tableLength, false, 'diningRoom');
 					break;
 			}
-			
+		}
+		this.addTorchesToRoom(room);
+	},
+	addTorchesToRoom: function(room){
+		for (var y = room.y+1; y < room.y + room.height - 1; y++){
+			if (Random.chance(30) && !this.isMultiTile(room.x+1, y)){
+				this.map[room.x+1][y] = Cells.L_TORCH;
+				y++;
+			}
+		}
+		for (var y = room.y+1; y < room.y + room.height - 1; y++){
+			if (Random.chance(30) && !this.isMultiTile(room.x+room.width-2, y)){
+				this.map[room.x+room.width-2][y] = Cells.R_TORCH;
+				y++;
+			}
 		}
 	}
 }

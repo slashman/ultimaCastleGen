@@ -388,6 +388,8 @@ RoomBuilder.prototype = {
 			case 'library':
 				additionalElements = ['bookshelf', 'tableAndChair', Cells.PLANT, Cells.SHELF_2];
 				break;
+			case 'hall':
+				additionalElements = [Cells.PLANT, Cells.FOUNTAIN];
 
 		}
 		var element = Random.randomElementOf(additionalElements);
@@ -681,6 +683,17 @@ RoomBuilder.prototype = {
 	},
 	build_library: function(room){
 		this.buildLivingQuarters(room, 'library');
+	},
+	build_throneHall: function(room){
+		this.build_hall(room);
+	},
+	build_halls: function(room){ // Wall halls}
+		this.buildRoom(room);
+		if (room.width > 3)
+			this.addTorchesToRoom(room);
+	},
+	build_hall: function(room){
+		this.buildLivingQuarters(room, 'hall');
 	}
 }
 

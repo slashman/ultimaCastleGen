@@ -249,15 +249,6 @@ RoomsGenerator.prototype = {
 		if (def.horizontalConnections === 'both' || def.horizontalConnections === 'bottom'){
 			yEnd = this.generationParams.height - 3 - Math.floor(def.size / 2) - Math.floor(connectionWidth/2) - adjustment;
 		}
-		/*this.addRoom(
-			x,
-			y,
-			'rooms',
-			'',
-			//Math.floor(this.generationParams.width / 2) - x,
-			this.generationParams.width -  2 * x - 1,
-			yEnd - y + 1
-		);*/
 		var area = {
 			x: x,
 			y: y,
@@ -365,7 +356,63 @@ RoomsGenerator.prototype = {
 				});
 			}
 		}
+
+		// Now let's fill the spaces and make these rooms grow again
+		area.w = this.generationParams.width - 2 * x - 1;
+		while(true){
+			var noHoles = true;
+			hole: for (var x = area.x; x <= area.x + area.w - 2; x++){
+				for (var y = area.y; y <= area.y + area.h - 2; y++){
+					// Is there a hole here? is it big enough?
+					if (this.holeAt(addedRooms, x,y)){
+						noHoles = false;
+						// Lets plot a room and make it grow
+						var fillRoom = {
+							x: x,
+							y: y,
+							w: 5,
+							h: 5
+						};
+						console.log("Placing a fill room", fillRoom);
+						addedRooms.push(fillRoom);
+						while(true){
+							var grew = false;
+							//Select a random direction first, if it can't grow in that direction, check in order
+							var randomDirection = Random.rand(0,3);
+							if (this.roomCanGrow(fillRoom, addedRooms, randomDirection)){
+								this.growRoom(fillRoom, randomDirection);
+								grew = true;
+							} else {
+								for (var j = 0; j <= 3; j++){
+									if (this.roomCanGrow(fillRoom, addedRooms, j)){
+										this.growRoom(fillRoom, j);
+										grew = true;
+										break;
+									}
+								}
+							}
+							if (!grew){
+								break;
+							}
+						}
+						break hole;
+					}
+				}
+			}
+			if (noHoles)
+				break;
+		}
 		return addedRooms;
+	},
+	holeAt: function(rooms, x,y){
+		for (var dx = 0; dx < 5; dx++){
+			for (var dy = 0; dy < 5; dy++){
+				if (!this.emptySpace(x+dx, y+dy, rooms)){
+					return false;
+				}
+			}
+		}
+		return true;
 	},
 	assignRooms: function(rooms, force){
 		/** We now have a lot of empty rooms, give a function to each based on the super structure
@@ -592,6 +639,36 @@ RoomsGenerator.prototype = {
 			}
 			if (existingRoom.x < room.x + room.w - 1 && existingRoom.x + existingRoom.w - 1 > room.x &&
     			existingRoom.y < room.y + room.h - 1 && existingRoom.y + existingRoom.h - 1 > room.y) {
+				return false;
+			}
+		}
+		return true;
+	},
+	emptySpace: function(x, y, tempRooms){
+		// Must be inside the rooms area
+		if (x >= this.roomsArea.x && x <= this.roomsArea.x + this.roomsArea.w &&
+			y >= this.roomsArea.y && y <= this.roomsArea.y + this.roomsArea.h) {
+			// Ok...
+		} else {
+			return false;
+		}
+
+		// Must not collide with other rooms (except the towers)
+		for (var i = 0; i < this.rooms.length; i++){
+			var existingRoom = this.rooms[i];
+			if (existingRoom.type === 'tower' || existingRoom.type === 'rooms'){
+				continue;
+			}
+			if (existingRoom.x < x && existingRoom.x + existingRoom.width - 1 > x &&
+    			existingRoom.y < y && existingRoom.y + existingRoom.height - 1 > y) {
+				return false;
+			}
+		}
+		// Must not collide with other temp rooms
+		for (var i = 0; i < tempRooms.length; i++){
+			var existingRoom = tempRooms[i];
+			if (existingRoom.x < x && existingRoom.x + existingRoom.w - 1 > x &&
+    			existingRoom.y < y && existingRoom.y + existingRoom.h - 1 > y) {
 				return false;
 			}
 		}

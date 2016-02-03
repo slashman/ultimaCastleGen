@@ -114,16 +114,6 @@ RoomBuilder.prototype = {
 		//TODO: Implement room.features.shape === 'cross'
 	},
 	build_courtyard: function(room){
-		/*
-			centralFeature: 'fountain', // 'fountain' / 'well'
-			additionalFountains: true, // only for 'fountain'
-			fountainSymmetry: 'x', // Only for 'fountain' with additionalFountains ['x', 'y', 'full'];
-			hasSmallLake: false // only for 'fountain'
-			connectionWithRooms: {
-				type: 'radial' // ['radial', 'around'],
-				terrain: 'floor'  // ['floor', 'dirt'])
-			},
-		*/
 		for (var x = room.x; x < room.x + room.width; x++){
 			for (var y = room.y; y < room.y + room.height; y++){
 				if (x == room.x || x == room.x + room.width - 1 || y == room.y || y == room.y + room.height - 1){
@@ -209,16 +199,6 @@ RoomBuilder.prototype = {
 		}
 	},
 	build_entranceHall: function(room){
-		/*
-		entranceStructure.hasFloor = Random.chance(50);
-		entranceStructure.hasCrossWindows = Random.chance(50);
-		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
-		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
-		entranceStructure.isMain = mainEntrance;
-		entranceStructure.width = this.castle.central.width - Random.rand(3, 6) * 2;
-		if (entranceStructure.width < 3)
-			entranceStructure.width = 3;
-		*/
 		var halfOpening = Math.floor((room.width - room.features.openingWidth) / 2);
 		var halfClosing = Math.floor((room.width - room.features.closingWidth) / 2);
 		for (var x = room.x; x < room.x + room.width; x++){
@@ -244,16 +224,6 @@ RoomBuilder.prototype = {
 		}
 	},
 	build_entrance: function(room){
-		/*
-		entranceStructure.hasFloor = Random.chance(50);
-		entranceStructure.hasCrossWindows = Random.chance(50);
-		entranceStructure.lighting = Random.randomElementOf(['none', 'torches', 'firepits']);
-		entranceStructure.hasBanners = mainEntrance && Random.chance(60);
-		entranceStructure.isMain = mainEntrance;
-		entranceStructure.width = this.castle.central.width - Random.rand(3, 6) * 2;
-		if (entranceStructure.width < 3)
-			entranceStructure.width = 3;
-		*/
 		for (var x = room.x; x < room.x + room.width; x++){
 			for (var y = room.y; y < room.y + room.height; y++){
 				this.map[x][y] = Cells.FLOOR;
@@ -366,7 +336,7 @@ RoomBuilder.prototype = {
 			}
 		}
 
-		if (quartersType != 'simple'){
+		if (quartersType === 'lord' || quartersType === 'guestRoom'){
 			// Place bed(s) for royal and guest quarters
 			var numberOfBeds = quartersType === 'guestRoom' ? 2 : 1;
 			for (var i = 0; i < numberOfBeds; i++){
@@ -392,9 +362,14 @@ RoomBuilder.prototype = {
 			return false;
 		}
 		// Table with chair
-		if (!room.placedElements["tableAndChair"] && quartersType != 'simple' && Random.chance(40)){
+		if (!room.placedElements["tableAndChair"] && (quartersType === 'lord' || quartersType === 'guestRoom') && Random.chance(40)){
 			room.placedElements["tableAndChair"] = true;
 			return 'tableAndChair'
+		}
+		// Kitchen Table
+		if (!room.placedElements["diningTable"] && quartersType === 'kitchen' && y > room.y+1 && y < room.y+room.height - 2 && Random.chance(40)){
+			room.placedElements["diningTable"] = true;
+			return 'diningTable'
 		}
 		var additionalElements = false;
 		switch (quartersType){
@@ -406,6 +381,9 @@ RoomBuilder.prototype = {
 				break;
 			case 'lord':
 				additionalElements = [Cells.SHELF, Cells.PLANT, Cells.JAR_TABLE];
+				break;
+			case 'kitchen':
+				additionalElements = [Cells.WINE_BARREL, Cells.OVEN,  Cells.BARREL, Cells.GRILL, 'tableAndChair'];
 				break;
 
 		}
@@ -437,6 +415,9 @@ RoomBuilder.prototype = {
 					additionalElements.push(Cells.MIRROR);
 				if (!room.placedElements[Cells.CLOCK])
 					additionalElements.push(Cells.CLOCK);
+				break;
+			case 'kitchen':
+				additionalElements = [Cells.WINE_BARREL, Cells.OVEN,  Cells.BARREL, Cells.GRILL];
 				break;
 
 		}
@@ -671,6 +652,9 @@ RoomBuilder.prototype = {
 			room.northDoors = wall;
 		}
 		wall.push({cell: Cells.WALL_FIREPLACE, position: Random.rand(room.x+1, room.x+room.width - 2)});
+	},
+	build_kitchen: function(room){
+		this.buildLivingQuarters(room, 'kitchen');
 	}
 }
 

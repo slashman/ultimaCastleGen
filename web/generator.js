@@ -341,7 +341,8 @@ module.exports = {
 	WINE_BARREL: 'wineBarrel',
 	LIBRARY_1: 'library1',
 	LIBRARY_2: 'library2',
-	CHEST: 'chest'
+	CHEST: 'chest',
+	FAKE_WALL: 'fakeWall'
 };
 },{}],"/home/administrator/git/ultimacastlegen/src/MapGenerator.js":[function(require,module,exports){
 var CastleStructureGenerator = require('./CastleStructureGenerator');
@@ -409,6 +410,20 @@ RoomBuilder.prototype = {
 		for (var i = 0; i < rooms.length; i++){
 			this.placeDoors(rooms[i]);
 		}
+		for (var x = 0; x < 32; x++){
+			for (var y = 0; y < 32; y++){
+				if (this.map[x][y] === Cells.CHEST){
+					// Place secret door nearby
+					if (x > 16 && Random.chance(90) && this.map[x+1][y] === Cells.WALL){
+						this.map[x+1][y] = Cells.FAKE_WALL;
+					}
+					if (x < 16 && Random.chance(90) && this.map[x-1][y] === Cells.WALL){
+						this.map[x-1][y] = Cells.FAKE_WALL;
+					}
+				}
+			}
+		}
+
 	},
 	buildRoom: function(room){
 		for (var x = room.x; x < room.x + room.width; x++){
@@ -1980,7 +1995,25 @@ function CanvasRenderer(config){
 	for (key in Cells){
 		var val = Cells[key];
 		this.tiles[val] = new Image();
+		totalImages++;
+		this.tiles[val].onload = increaseLoadedCount;
 		this.tiles[val].src = 'img/'+val+'.png';
+	}
+	setTimeout(checkImagesLoaded, 500);
+}
+
+var totalImages = 0;
+var loadedImages = 0;
+
+function increaseLoadedCount(){
+	loadedImages++;
+}
+
+function checkImagesLoaded(){
+	if (loadedImages == totalImages){
+		imagesLoaded();
+	} else {
+		setTimeout(checkImagesLoaded, 500);
 	}
 }
 

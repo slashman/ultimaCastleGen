@@ -8,7 +8,25 @@ function CanvasRenderer(config){
 	for (key in Cells){
 		var val = Cells[key];
 		this.tiles[val] = new Image();
+		totalImages++;
+		this.tiles[val].onload = increaseLoadedCount;
 		this.tiles[val].src = 'img/'+val+'.png';
+	}
+	setTimeout(checkImagesLoaded, 500);
+}
+
+var totalImages = 0;
+var loadedImages = 0;
+
+function increaseLoadedCount(){
+	loadedImages++;
+}
+
+function checkImagesLoaded(){
+	if (loadedImages == totalImages){
+		imagesLoaded();
+	} else {
+		setTimeout(checkImagesLoaded, 500);
 	}
 }
 

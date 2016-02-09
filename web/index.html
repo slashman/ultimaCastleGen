@@ -6,7 +6,7 @@
 function generateMap(){
 	var generator = new MapGenerator();
 	var castle = generator.generateMap({royal: true, width: 32, height: 32})
-	document.getElementById("mapOutput").innerHTML = '<pre>'+JSON.stringify(castle, null, 2)+'</pre>';
+	document.getElementById("mapOutput").value = JSON.stringify(castle, null, 2);
 	canvasRenderer.drawSketch(castle.rooms, 'planCanvas', false);
 	canvasRenderer.drawLevelWithIcons(castle.map, 'levelCanvas');
 }
@@ -17,10 +17,18 @@ function imagesLoaded(){
 }
 </script>
 </head>
-<button onclick="generateMap()" id ="generateButton" disabled>Loading Images...</button>
-<canvas id="planCanvas" width="512" height="512"></canvas>
+<h2>Ultima Castle Generator</h2>
+<p>by <a href = "http://slashie.net" target = "_blank">Slashie</a></p>
+<p>Read more about this generator in <a href = "http://blog.slashie.net/category/ultima-castle-map-generator/" target = "_blank">my blog</a></p>
+<p><button onclick="generateMap()" id ="generateButton" disabled>Loading Images...</button></p>
+<p>
 <canvas id="levelCanvas" width="512" height="512"></canvas>
-<div id = "mapOutput"></div>
+<canvas id="planCanvas" width="512" height="512"></canvas>
+<p>
+<p>
+<textarea id = "mapOutput" rows="20" cols="40"></textarea>
+</p>
+
 <script>
 var canvasRenderer = new CanvasRenderer({LEVEL_WIDTH: 32, LEVEL_HEIGHT: 32});
 </script>

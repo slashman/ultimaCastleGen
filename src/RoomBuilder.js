@@ -18,6 +18,20 @@ RoomBuilder.prototype = {
 		for (var i = 0; i < rooms.length; i++){
 			this.placeDoors(rooms[i]);
 		}
+		for (var x = 0; x < 32; x++){
+			for (var y = 0; y < 32; y++){
+				if (this.map[x][y] === Cells.CHEST){
+					// Place secret door nearby
+					if (x > 16 && Random.chance(90) && this.map[x+1][y] === Cells.WALL){
+						this.map[x+1][y] = Cells.FAKE_WALL;
+					}
+					if (x < 16 && Random.chance(90) && this.map[x-1][y] === Cells.WALL){
+						this.map[x-1][y] = Cells.FAKE_WALL;
+					}
+				}
+			}
+		}
+
 	},
 	buildRoom: function(room){
 		for (var x = room.x; x < room.x + room.width; x++){

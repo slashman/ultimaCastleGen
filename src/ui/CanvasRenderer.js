@@ -10,7 +10,7 @@ function CanvasRenderer(config){
 		this.tiles[val] = new Image();
 		totalImages++;
 		this.tiles[val].onload = increaseLoadedCount;
-		this.tiles[val].src = 'img/'+val+'.png';
+		this.tiles[val].src = 'img64/'+val+'.png';
 	}
 	setTimeout(checkImagesLoaded, 500);
 }
@@ -85,7 +85,7 @@ CanvasRenderer.prototype = {
 			for (var y = 0; y < this.config.LEVEL_HEIGHT; y++){
 				var cell = cells[x][y]; 
 				if (cell)
-					context.drawImage(this.tiles[cell], x * 14, y * 16);
+					context.drawImage(this.tiles[cell], x * 32, y * 32, 32, 32);
 			}
 		}
 	}
